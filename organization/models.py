@@ -206,7 +206,7 @@ class Membership(TimeStampModel):
         """
         if course.organization_id != self.organization_id:
             return False
-        
+
         if not self.is_student:
             return False
 
@@ -223,7 +223,7 @@ class Membership(TimeStampModel):
 
         if course.organization_id != self.organization_id:
             return False
-        
+
         if self.is_owner or self.is_admin:
             return True
         

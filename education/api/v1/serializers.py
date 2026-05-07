@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from education.services.feedback_service import FeedbackService
+from django.db import IntegrityError
 from education.models import (
     Course,
     Lesson,
@@ -242,8 +243,30 @@ class FeedbackSerializer(serializers.ModelSerializer):
         model = Feedback
         fields = [
             "id",
-            "course",
+            "rating",
+            "comment",
             "student",
+            "created_at",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        request = self.context.get("request")
+        membership = request.membership
+
+        if membership.is_student:
+            data.pop("student", None)
+
+        return data
+
+
+
+class FeedbackCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = [
+            "id",
             "rating",
             "comment",
             "is_approved",
@@ -251,20 +274,37 @@ class FeedbackSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "student",
             "is_approved",
             "created_at"
         ]
-    
-    def create(self, validated_data):
+
+    def validate(self, attrs):
         request = self.context.get("request")
         membership = request.membership
+        course_pk = self.context.get("view").kwargs.get("pk")
 
-        feedback, created = FeedbackService.submit_feedback(
-            student=membership,
-            course=validated_data.get("course"),
-            organization=membership.organization,
-            rating=validated_data.get("rating"),
-            comment=validated_data.get("comment")
-        )
+        try:
+            course = Course.objects.get(
+                pk=course_pk
+            )
+        except Course.DoesNotExist:
+            raise serializers.ValidationError("Course not found")
 
-        return feedback
+        if not membership.is_enrolled_in(course):
+            raise serializers.ValidationError("You can only give feedback to those courses in which you are enrolled")
+
+        attrs["course_id"] = course_pk
+
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+
+        validated_data["student"] = request.membership
+        validated_data["organization"] = request.membership.organization
+        try:
+            return super().create(validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError("You have already submitted feedback for this course")
+

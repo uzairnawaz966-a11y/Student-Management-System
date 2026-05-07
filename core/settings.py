@@ -231,7 +231,7 @@ LOGGING = {
 # For idrees - Student in Testing organization --- IN USE ---
 
 # "tokens": {
-#         "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc3OTkyNzczLCJpYXQiOjE3Nzc5ODkxNzMsImp0aSI6ImNhZjE0YzM5YTIxMzQ3YzI4Njc3YmQ0NjZiMGRiNmU2IiwidXNlcl9pZCI6IjM2Iiwib3JnYW5pemF0aW9uX2lkIjozLCJyb2xlIjoiU1RVREVOVCJ9.oKS-3-I8YQlpMMt7hRqX6FQ_Ohsed3V61KWzoQg7VJ0",
+#         "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc4MTUzNDQ5LCJpYXQiOjE3NzgxNDk4NDksImp0aSI6ImIzNDVjMTYxYjk0ZTQ0ZmJhN2YyYTBmMjUxZTYzNmU4IiwidXNlcl9pZCI6IjM2Iiwib3JnYW5pemF0aW9uX2lkIjozLCJyb2xlIjoiU1RVREVOVCJ9.66prE1nN-K1Rnnzrie1j4gwJZPOkUN1F3nU3cyiQH1c",
 #         "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3ODU2NTYwNywiaWF0IjoxNzc3OTYwODA3LCJqdGkiOiIyNTg3OTIyN2Q5MDY0MjE4YTExYTBiYjU0NDEwMjFjZiIsInVzZXJfaWQiOiIzNiIsIm9yZ2FuaXphdGlvbl9pZCI6Mywicm9sZSI6IlNUVURFTlQifQ.aSaVs8H-QAAuT-vcjmgjPACP3lSfhyRd_HetcaR253A"
 #     }
 
