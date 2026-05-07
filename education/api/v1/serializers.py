@@ -1,0 +1,270 @@
+from rest_framework import serializers
+from education.services.feedback_service import FeedbackService
+from education.models import (
+    Course,
+    Lesson,
+    Enrollment,
+    Progress,
+    Feedback
+)
+from organization.models import Membership
+from django.db.models import Max
+from rest_framework.exceptions import PermissionDenied
+from django.db import transaction
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "organization",
+            "title",
+            "description",
+            "type",
+            "is_active",
+            "status",
+            "published_at",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "instructor",
+            "organization",
+            "published_at",
+        ]
+
+
+class CourseCreateSerializer(serializers.ModelSerializer):
+    instructor_id = serializers.IntegerField(required=False, write_only=True)
+
+    class Meta:
+        model = Course
+        fields = [
+            "title",
+            "type",
+            "description",
+            "instructor_id"
+        ]
+
+    def validate(self, attrs):
+        """
+        Validating data only for OWNER and INSTRUCTOR roles
+        ADMIN and STUDENT will be blocked for this API througn permissions
+        """
+
+        request = self.context["request"]
+        membership = request.membership
+
+        if membership.is_owner:
+            instructor_id = attrs.pop("instructor_id", None)
+
+            if not instructor_id:
+                raise serializers.ValidationErrifor("Owner is required to assign any instructor")
+
+            try:
+                instructor = Membership.objects.get(
+                    pk=instructor_id,
+                    organization=membership.organization,
+                    role=Membership.Role.INSTRUCTOR,
+                    is_active=True
+                )
+            except Membership.DoesNotExist:
+                raise serializers.ValidationError("Invalid Instructor")
+
+            attrs["instructor"] = instructor
+
+        elif membership.is_instructor:
+            if "instructor_id" in attrs:
+                raise serializers.ValidationError("Instructor cannot assign Instructor")
+
+            attrs["instructor"] = membership
+            
+
+        return attrs
+
+
+class CourseUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = [
+            "title",
+            "description",
+            "type"
+        ]
+
+    def validate(self, attrs):
+        title = attrs.get("title")
+
+        if title is not None and len(title.strip()) < 3:
+            raise serializers.ValidationError("Title must contain more than 3 characters")
+
+        return attrs
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [
+            "id",
+            "title",
+            "content",
+            "video_link",
+            "course"
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if not instance.is_published or not instance.course.is_published:
+            data.pop("content", None)
+            data.pop("video_link", None)
+
+        return data
+
+
+class LessonCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [
+            "title",
+            "content",
+            "video_link"
+        ]
+
+    def validate(self, attrs):
+        if not attrs.get("content") and not attrs.get("video_link"):
+            raise serializers.ValidationError("Lesson must have either content or video_link")
+
+        return attrs
+
+
+    def create(self, validated_data):
+        request = self.context["request"]
+        membership = request.membership
+        course = self.context.get("course")
+
+        if membership.is_instructor:
+            if not membership.owns_course(course):
+                raise PermissionDenied("You can only create lessons for your own courses")
+
+        last_order = Lesson.objects.filter(course_id=course.pk).aggregate(
+            max_order=Max("order")
+        )["max_order"]
+
+        order = (last_order or 0) + 1
+
+        return Lesson.objects.create(
+            course=course,
+            order=order,
+            **validated_data
+        )
+
+
+class LessonUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [
+            "title",
+            "content",
+            "video_link"
+        ]
+
+    def validate(self, attrs):
+        if not attrs.get("content") and not attrs.get("video_link"):
+            raise serializers.ValidationError("Lesson must have either content or video_link")
+
+        return attrs
+
+
+class LessonPartialUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = [
+            "title",
+            "content",
+            "video_link"
+        ]
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = [
+            "id",
+            "course",
+            "student",
+            "enrolled_at",
+            "is_cancelled"
+        ]
+
+
+class EnrollmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = []
+
+    @transaction.atomic
+    def create(self, validated_data):
+        request = self.context["request"]
+        membership = request.membership
+        course_pk = self.context["view"].kwargs.get("pk")
+
+        if not membership.is_student:
+            raise PermissionDenied("Only students can enroll in courses")
+
+        try:
+            course = Course.objects.get(
+                id=course_pk,
+                organization=membership.organization
+            )
+        except Course.DoesNotExist:
+            raise serializers.ValidationError("Course not found")
+
+        enrollment, created = Enrollment.objects.get_or_create(
+            student=membership,
+            course=course,
+            defaults={
+                "organization": membership.organization
+            }
+        )
+
+        if not created:
+            raise serializers.ValidationError("Already enrolled in this course")
+
+        Progress.objects.create(enrollment=enrollment)
+
+        return enrollment
+
+
+class FeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feedback
+        fields = [
+            "id",
+            "course",
+            "student",
+            "rating",
+            "comment",
+            "is_approved",
+            "created_at"
+        ]
+        read_only_fields = [
+            "id",
+            "is_approved",
+            "created_at"
+        ]
+    
+    def create(self, validated_data):
+        request = self.context.get("request")
+        membership = request.membership
+
+        feedback, created = FeedbackService.submit_feedback(
+            student=membership,
+            course=validated_data.get("course"),
+            organization=membership.organization,
+            rating=validated_data.get("rating"),
+            comment=validated_data.get("comment")
+        )
+
+        return feedback
