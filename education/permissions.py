@@ -7,7 +7,8 @@ ROLE_ACTIONS = {
     "OWNER": {
         "CourseViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
-            "destroy", "publish", "create_lesson", "lessons", "course_enrollments"
+            "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
+            "feedbacks"
         ],
         "LessonViewSet": [
             "list", "retrieve", "create", "update", "partial_update", "destroy"
@@ -17,7 +18,8 @@ ROLE_ACTIONS = {
     "INSTRUCTOR": {
         "CourseViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
-            "destroy", "publish", "create_lesson", "lessons", "course_enrollments"
+            "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
+            "feedbacks"
         ],
         "LessonViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
@@ -26,12 +28,15 @@ ROLE_ACTIONS = {
     },
 
     "ADMIN": {
-        "CourseViewSet": ["list", "retrieve", "lessons"],
+        "CourseViewSet": ["list", "retrieve", "lessons", "feedbacks"],
         "LessonViewSet": ["list", "retrieve"]
     },
 
     "STUDENT": {
-        "CourseViewSet": ["list", "retrieve", "enroll", "cancel_enrollment", "lessons", "complete_lesson"],
+        "CourseViewSet": [
+            "list", "retrieve", "enroll", "cancel_enrollment", "lessons",
+            "complete_lesson", "feedback", "enrollment_status", "feedbacks"
+        ],
         "LessonViewSet": ["list", "retrieve"]
     }
 }

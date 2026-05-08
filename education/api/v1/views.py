@@ -1,7 +1,5 @@
 from education.services.course_service import CourseService
 from education.services.progress_service import ProgressService
-from education.services.feedback_service import FeedbackService
-from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
@@ -20,12 +18,13 @@ from education.api.v1.serializers import (
     EnrollmentSerializer,
     EnrollmentCreateSerializer,
     FeedbackSerializer,
+    FeedbackCreateSerializer,
 )
 from education.models import (
     Course,
     Lesson,
     Enrollment,
-    Feedback,
+    Feedback
 )
 
 
@@ -81,7 +80,6 @@ class CourseViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-
     @action(detail=True, methods=['post'], url_path="create-lesson")
     def create_lesson(self, request, pk=None):
         course = self.get_object()
@@ -104,7 +102,6 @@ class CourseViewSet(viewsets.ModelViewSet):
         else:
             raise PermissionDenied("You cannot create lessons for this course")
 
-
     @action(detail=True, methods=["get"])
     def lessons(self, request, pk=None):
         course = self.get_object()
@@ -122,32 +119,32 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     @action(detail=True, methods=["post"])
     def enroll(self, request, pk=None):
         course = self.get_object()
+        membership = request.membership
 
-        if not course.is_published:
-            raise PermissionDenied("You cannot enroll in unpublished courses")
+        if membership.can_enroll_in(course):
 
-        serializer = EnrollmentCreateSerializer(
-            data={},
-            context={
-                "request": request,
-                "view": self
-            }
-        )
-        serializer.is_valid(raise_exception=True)
+            serializer = EnrollmentCreateSerializer(
+                data={},
+                context={
+                    "request": request,
+                    "view": self
+                }
+            )
+            serializer.is_valid(raise_exception=True)
 
-        serializer.save()
+            serializer.save()
 
-        return Response(
-                {
-                    "message": "You are enrolled successfully"
-                },
-            status=status.HTTP_201_CREATED
-        )
-
+            return Response(
+                    {
+                        "message": "You are enrolled successfully"
+                    },
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            raise PermissionDenied("You cannot enroll in unpublished or inactive courses")
 
     @action(detail=True, methods=["get"])
     def course_enrollments(self, request, pk=None):
@@ -159,18 +156,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         course = self.get_object()
         membership = request.membership
 
-        if membership.is_instructor and not membership.owns_course(course):
-            raise PermissionDenied("You can only access your own course's enrollments")
+        if membership.can_view_enrollments_for(course):
+            queryset = Enrollment.objects.filter(course=course)
 
-        queryset = Enrollment.objects.filter(
-            course=course,
-            course__instructor=membership,
-            organization=membership.organization
-        )
-
-        serializer = EnrollmentSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+            serializer = EnrollmentSerializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            raise PermissionDenied("You are not allowed to access this api")
 
     @action(detail=True, methods=['post'])
     def cancel_enrollment(self, request, pk=None):
@@ -197,6 +189,71 @@ class CourseViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_204_NO_CONTENT
         )
+
+    @action(detail=True, methods=['post'])
+    def feedback(self, request, pk=None):
+        serializer = FeedbackCreateSerializer(
+            data=request.data,
+            context={
+                "request": request,
+                "view": self
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+
+        serializer.save()
+
+        return Response(
+            {
+                "message": "Feedback posted",
+                "data": serializer.data
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=["get"])
+    def enrollment_status(self, request, pk=None):
+        course = self.get_object()
+        membership = request.membership
+
+        is_enrolled = membership.is_enrolled_in(course)
+
+        return Response(
+            {
+                "course_id": course.id,
+                "is_enrolled": is_enrolled
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['get'], url_path="enrollments/me")
+    def my_enrollments(self, request):
+        membership = request.membership
+
+        queryset = Enrollment.objects.filter(
+            student=membership,
+            organization=membership.organization
+        ).order_by("-created_at")
+
+        serializer = EnrollmentSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def feedbacks(self, request, pk=None):
+        course = self.get_object()
+        queryset = Feedback.objects.filter(
+            course=course,
+            is_approved=True
+        ).order_by("-created_at")
+
+        serializer = FeedbackSerializer(
+            queryset,
+            many=True,
+            context={
+                "request": request
+            }
+        )
+        return Response(serializer.data)
 
 
 class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
@@ -239,30 +296,6 @@ class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.Des
             },
             status=status.HTTP_200_OK
         )
-
-
-
-class FeedbackViewSet(viewsets.ModelViewSet):
-    serializer_class = FeedbackSerializer
-
-    def get_queryset(self):
-        return Feedback.objects.filter(
-            organization=self.request.membership.organization
-        )
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        serializer.is_valid(raise_exception=True)
-
-        course = serializer.validated_data.get("course")
-
-        FeedbackService.get_valid_enrollment(
-            student=membership,
-            course=course
-        )
-
-
 
 
 
