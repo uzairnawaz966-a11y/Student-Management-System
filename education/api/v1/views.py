@@ -19,6 +19,7 @@ from education.api.v1.serializers import (
     EnrollmentCreateSerializer,
     FeedbackSerializer,
     FeedbackCreateSerializer,
+    LessonPublishSerializer
 )
 from education.models import (
     Course,
@@ -293,6 +294,29 @@ class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.Des
             {
                 "message": "Lesson completed",
                 "progress": progress.percentage
+            },
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=["post"])
+    def publish(self, request, pk=None):
+        lesson = self.get_object()
+
+        serializer = LessonPublishSerializer(
+            data={},
+            context={
+                "request": request,
+                "lesson": lesson
+            }
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        lesson.publish()
+
+        return Response(
+            {
+                "message": "Lesson published successfully"
             },
             status=status.HTTP_200_OK
         )

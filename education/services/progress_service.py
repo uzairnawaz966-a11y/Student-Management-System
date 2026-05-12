@@ -1,5 +1,6 @@
 from education.models import LessonProgress, Progress
 from django.utils import timezone
+from organization.models import OrganizationJoinLink, Membership
 
 class ProgressService:
 
@@ -55,3 +56,21 @@ class ProgressService:
 
 
         return ProgressService.recalculate_progress(enrollment)
+
+    @staticmethod
+    def join_organization(user, token):
+        try:
+            link = OrganizationJoinLink.objects.get(
+                token=token,
+                status=OrganizationJoinLink.Status.ACTIVE
+            )
+        except OrganizationJoinLink.DoesNotExist:
+            raise ValueError("Invalid or expired link")
+        if link.max_users and link.used_count >= link.max_users:
+            link.status = OrganizationJoinLink.Status.DISABLED
+            link.save(update_fields=["status"])
+            raise ValueError("Join limit reached")
+    
+        if Membership.objects.filter(user=user, organization=link.organization).exists():
+            raise ValueError("Already a member")
+            

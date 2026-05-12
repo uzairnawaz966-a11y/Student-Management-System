@@ -1,5 +1,5 @@
+import uuid
 from django.db import models
-from core.models import PublishableModel
 from core.models import TimeStampModel
 from django.conf import settings
 
@@ -33,7 +33,6 @@ class OrganizationSetting(TimeStampModel):
 
     def __str__(self):
         return f"Settings ( {self.organization.name} )"
-
 
 class Membership(TimeStampModel):
     """
@@ -235,3 +234,21 @@ class Membership(TimeStampModel):
 
     def __str__(self):
         return f"{self.user.username} ( {self.role} ) - {self.organization.name}"
+
+
+class OrganizationJoinLink(TimeStampModel):
+
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        DISABLED = "DISABLED", "Disabled"
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="join_links")
+    created_by = models.ForeignKey(Membership, on_delete=models.CASCADE, related_name="created_join_links")
+    role = models.CharField(max_length=10, choices=Membership.Role.choices)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
+    max_users = models.PositiveIntegerField(null=True, blank=True)
+    used_count = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.organization} - {self.role}"

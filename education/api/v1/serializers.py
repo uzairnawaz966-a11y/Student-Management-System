@@ -308,3 +308,32 @@ class FeedbackCreateSerializer(serializers.ModelSerializer):
         except IntegrityError:
             raise serializers.ValidationError("You have already submitted feedback for this course")
 
+
+class LessonPublishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = []
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        membership = request.membership
+        lesson = self.context.get("lesson")
+
+        course = lesson.course
+
+        if membership.is_instructor and not membership.owns_course(course):
+            raise serializers.ValidationError(
+                "You can only publish lessons of your own course"
+            )
+
+        if not course.is_published:
+            raise serializers.ValidationError(
+                "Cannot publish lesson of unpublished course"
+            )
+
+        if lesson.is_published:
+            raise serializers.ValidationError(
+                "Lesson is already published"
+            )
+
+        return attrs
