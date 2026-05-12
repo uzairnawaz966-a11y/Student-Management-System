@@ -119,7 +119,7 @@ class AuthService:
                 expiration_date=expiry_date,
             )
 
-        activation_link = f"{settings.ACTIVATION_BASE_URL}api/activate-user/{activation_token.token}/"
+        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/activate-user/{activation_token.token}/"
 
         email_client = EmailClient()
         try:
@@ -166,7 +166,7 @@ class AuthService:
             expiration_date=expiry_date
         )
 
-        activation_link = f"{settings.ACTIVATION_BASE_URL}api/activate-user/{token_object.token}"
+        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/activate-user/{token_object.token}"
 
         email_client = EmailClient()
 

@@ -125,6 +125,21 @@ class Lesson(TimeStampModel, PublishableModel):
         super().save(*args, **kwargs)
 
 
+    def publish(self):
+        self.status = self.Status.PUBLISHED
+        self.published_at = timezone.now()
+        self.status_changed_at = timezone.now()
+        self.failure_cause = None
+        self.save(
+            update_fields=[
+                "status",
+                "published_at",
+                "status_changed_at",
+                "failure_cause"
+            ]
+        )
+
+
     def __str__(self):
         return self.title
 

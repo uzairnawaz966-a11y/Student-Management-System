@@ -20,7 +20,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ACTIVATION_BASE_URL = os.getenv("ACTIVATION_BASE_URL")
+ORGANIZATION_BASE_URL = os.getenv("ORGANIZATION_BASE_URL")
 
 
 # Quick-start development settings - unsuitable for production
