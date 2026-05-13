@@ -6,18 +6,28 @@ from django.conf import settings
 class OrganizationJoinLinkService:
 
     @staticmethod
-    def generate_join_link(membership, max_users=None):
-        if membership.is_owner:
+    def create_join_link(membership, role, max_users=None):
 
-            link = OrganizationJoinLink.objects.create(
-                organization=membership.organization,
-                created_by=membership,
-                role=membership.role,
-                max_users=max_users
-            )
+        link = OrganizationJoinLink.objects.create(
+            organization=membership.organization,
+            created_by=membership,
+            role=role,
+            max_users=max_users
+        )
 
-            organization_join_url = f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"
+        organization_join_url = f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"
 
-            return organization_join_url
-        else:
-            raise PermissionDenied("Only owners can create join links")
+        return organization_join_url
+
+    # @staticmethod
+    # def accept_join(token, user):
+    #     try:
+    #         link = OrganizationJoinLink.objects.get(token=token)
+    #     except OrganizationJoinLink.DoesNotExist:
+    #         raise ValueError("Invalid join link")
+
+    #     if link.status == OrganizationJoinLink.Status.ACTIVE:
+    #         if link.used_count > link.max_users:
+    #             raise PermissionDenied("Max limit reached")
+    #     else:
+    #         raise PermissionDenied("Link disabled")

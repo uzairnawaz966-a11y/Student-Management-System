@@ -3,6 +3,7 @@ from organization.models import (
     Organization,
     OrganizationSetting,
     Membership,
+    OrganizationJoinLink,
 )
 
 
@@ -45,4 +46,20 @@ class MembershipAdmin(admin.ModelAdmin):
         "is_active",
         "created_at",
         "updated_at",
+    ]
+
+
+@admin.register(OrganizationJoinLink)
+class OrganizationJoinLinkAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "organization",
+        "created_by",
+        "role",
+        "token",
+        "status",
+        "max_users",
+        "used_count",
+        "created_at",
+        "updated_at"
     ]
