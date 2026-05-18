@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from organization.models import OrganizationJoinLink, Membership
+from organization.models import Organization, OrganizationJoinLink, Membership
+
+
+class OrganizationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = [
+            "name",
+            "description"
+        ]
 
 
 class OrganizationJoinLinkSerializer(serializers.ModelSerializer):    
@@ -50,5 +59,26 @@ class JoinLinkValidationSerializer(serializers.Serializer):
 
         if invite_link.used_count >= invite_link.max_users:
             raise serializers.ValidationError("Join link usage limit exceeded")
+
+        return attrs
+
+
+class SwitchOrganizationSerializer(serializers.Serializer):
+    organization_id = serializers.IntegerField()
+
+    def validate_organization_id(self, attrs):
+
+        user = self.context["request"].user
+
+        membership = Membership.objects.filter(
+                user=user,
+                organization_id=attrs,
+                is_active=True
+        ).exists()
+
+        if not membership:
+            raise serializers.ValidationError(
+                "You don't have access to this organization"
+            )
 
         return attrs
