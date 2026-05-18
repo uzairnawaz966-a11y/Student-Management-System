@@ -250,5 +250,9 @@ class OrganizationJoinLink(TimeStampModel):
     max_users = models.PositiveIntegerField(null=True, blank=True)
     used_count = models.PositiveIntegerField(default=0)
 
+    @property
+    def is_valid(self):
+        return self.status == self.Status.ACTIVE
+
     def __str__(self):
         return f"{self.organization} - {self.role}"
