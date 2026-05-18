@@ -75,13 +75,13 @@ class AuthService:
 
 
     def create_profile(self, membership):
-        if membership.role == Membership.Role.OWNER:
+        if membership.is_owner:
             profile, _ = Owner.objects.get_or_create(membership=membership)
-        elif membership.role == Membership.Role.ADMIN:
+        elif membership.is_admin:
             profile, _ = Admin.objects.get_or_create(membership=membership)
-        elif membership.role == Membership.Role.INSTRUCTOR:
+        elif membership.is_instructor:
             profile, _ = Instructor.objects.get_or_create(membership=membership)
-        elif membership.role == Membership.Role.STUDENT:
+        elif membership.is_student:
             profile, _ = Student.objects.get_or_create(membership=membership)
         else:
             raise ValueError("Invalid role")

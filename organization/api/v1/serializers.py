@@ -28,3 +28,27 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Not allowed to create link for this role")
 
         return attrs
+
+
+class JoinLinkDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationJoinLink
+        fields = [
+            "organization",
+            "created_by",
+            "status"
+        ]
+
+
+class JoinLinkValidationSerializer(serializers.Serializer):
+
+    def validate(self, attrs):
+        invite_link = self.context.get("invite_link")
+
+        if not invite_link.is_valid:
+            raise serializers.ValidationError("Link disabled")
+
+        if invite_link.used_count >= invite_link.max_users:
+            raise serializers.ValidationError("Join link usage limit exceeded")
+
+        return attrs
