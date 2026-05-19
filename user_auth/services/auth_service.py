@@ -26,13 +26,10 @@ class AuthService:
         if activation_token.is_expired:
             return {
                 "message": "Expired links cannot be used to activate account"
-            }
-        
+            }, 400
+
         with transaction.atomic():
             user = activation_token.user
-            membership = Membership.objects.get(user=user, organization_id=3, role=Membership.Role.INSTRUCTOR)
-            membership.is_active = True
-            membership.save()
             user.is_active = True
             user.save()
 
@@ -88,30 +85,43 @@ class AuthService:
         return profile
 
 
+    def create_membership(self, user, organization_id, role):
+        membership = Membership.objects.create(
+            user=user,
+            organization_id=organization_id,
+            role=role,
+            is_active=False
+        )
+
+        self.create_profile(membership)
+        return membership
+
+
     def create_account(self, validated_data):
         """
         Creates an Inactive user account in the database
         Automatically generates a one time activation link which expires after 24 hours
-        Calls the email client to send links to users' gmails 
-        Also creates a membership instance for each member of the organization
-        Creates a user profile after the account is created
+        Calls the email client to send links to users' gmails
         """
 
         validated_data.pop('password_confirmation', None)
 
+        organization_id = validated_data.pop("organization_id", None)
+        role = validated_data.pop("role", None)
+
         with transaction.atomic():
 
-            user = User.objects.create_user(**validated_data, is_active=False)
-            membership, _ = Membership.objects.get_or_create(
-                user=user,
-                organization_id=3,
-                role="INSTRUCTOR",
-                defaults={
-                    "is_active": False
-                }
+            user = User.objects.create_user(
+                **validated_data,
+                is_active=False
             )
 
-            self.create_profile(membership)
+            if organization_id is not None and role is not None:
+                self.create_membership(
+                    user=user,
+                    organization_id=organization_id,
+                    role=role
+                )
 
             expiry_date = timezone.now() + timedelta(hours=24)
             activation_token = AccountActivationToken.objects.create(
@@ -138,7 +148,7 @@ class AuthService:
                     "first_name": user.first_name,
                     "last_name": user.last_name
                 }
-            }, 201
+            }
 
 
     def resend_activation_link(self, email):

@@ -13,9 +13,9 @@ class Organization(TimeStampModel):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="organizations")
     description = models.TextField()
     is_active = models.BooleanField(default=True)
-    total_admins = models.PositiveIntegerField()
-    total_instructors = models.PositiveIntegerField()
-    total_students = models.PositiveIntegerField()
+    total_admins = models.PositiveIntegerField(default=0)
+    total_instructors = models.PositiveIntegerField(default=0)
+    total_students = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name

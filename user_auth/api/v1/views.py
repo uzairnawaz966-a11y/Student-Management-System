@@ -15,8 +15,8 @@ class RegisterUser(APIView):
         serialized_object = RegisterSerializer(data=request.data)
 
         if serialized_object.is_valid():
-            response, status_code = self.user_service.create_account(serialized_object.validated_data)
-            return Response(response, status=status_code)
+            response = self.user_service.create_account(serialized_object.validated_data)
+            return Response(response, status=status.HTTP_201_CREATED)
 
         return Response(serialized_object.errors, status=status.HTTP_400_BAD_REQUEST)
 
