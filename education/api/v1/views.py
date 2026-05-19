@@ -234,7 +234,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         queryset = Enrollment.objects.filter(
             student=membership,
             organization=membership.organization
-        ).order_by("-created_at")
+        ).order_by("-enrolled_at")
 
         serializer = EnrollmentSerializer(queryset, many=True)
         return Response(serializer.data)

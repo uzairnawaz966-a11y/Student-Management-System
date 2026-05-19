@@ -5,9 +5,9 @@ from organization.models import OrganizationJoinLink
 from organization.services.join_link_service import OrganizationJoinLinkService
 from organization.services.organization_service import OrganizationService
 from rest_framework.permissions import IsAuthenticated
-from organization.permissions import OrganizationJoinLinkGenerationPermission
-from rest_framework.decorators import action
+from organization.permissions import JoinLinkViewSetPermission
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
 from user_auth.api.v1.serializers import RegisterSerializer
 from user_auth.services.auth_service import AuthService
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -22,7 +22,6 @@ from organization.api.v1.serializers import (
 
 
 class OrganizationCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = OrganizationCreateSerializer(data=request.data)
@@ -91,7 +90,7 @@ class SwitchOrganizationAPIView(APIView):
 class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
     queryset = OrganizationJoinLink.objects.all()
     serializer_class = OrganizationJoinLinkSerializer
-    permission_classes = [IsAuthenticated, OrganizationJoinLinkGenerationPermission]
+    permission_classes = [IsAuthenticated, JoinLinkViewSetPermission]
     http_method_names = ["post", "get"]
 
     def get_queryset(self):
@@ -123,8 +122,34 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    @action(detail=False, methods=["get"], url_path="(?P<token>[^/.]+)")
-    def retrieve_invite_link(self, request, token=None):
+    @action(detail=True, methods=["post"])
+    def disable(self, request, pk=None):
+
+        membership = request.membership
+
+        invite_link = get_object_or_404(
+            OrganizationJoinLink,
+            pk=pk,
+            organization=membership.organization
+        )
+
+        updated_link = OrganizationJoinLinkService.disable_link(
+            invite_link=invite_link,
+            membership=membership
+        )
+
+        return Response(
+            {
+                "message": "Invite link disabled successfully",
+                "token": updated_link.token,
+                "status": updated_link.status
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+class RetrieveInviteLinkAPIView(APIView):
+    def get(self, token):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
@@ -142,8 +167,8 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
         return Response(detail_serializer.data, status=status.HTTP_200_OK)
 
 
-    @action(detail=False, methods=["post"], url_path="(?P<token>[^/.]+)/register/")
-    def register_from_invite_link(self, request, token=None):
+class RegisterFromInviteAPIView(APIView):
+    def post(self, request, token):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
@@ -151,11 +176,11 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        validated_data = serializer.validated_data
+        data = serializer.validated_data
 
-        validated_data["organization_id"] = invite_link.organization_id
-        validated_data["role"] = invite_link.role
+        data["organization_id"] = invite_link.organization_id
+        data["role"] = invite_link.role
 
-        response = AuthService.create_account(validated_data)
+        response = AuthService.create_account(data)
 
         return Response(response, status=status.HTTP_201_CREATED)
