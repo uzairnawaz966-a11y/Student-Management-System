@@ -54,6 +54,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         )
         serializer.instance = course
 
+        # able to create for owner/instructor 
+        # not able to create for student/admin 
+
     def perform_update(self, serializer):
         CourseService.update_course(
             membership=self.request.membership,
