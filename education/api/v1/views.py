@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import viewsets, mixins
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from education.services.lesson_service import LessonService
 from education.permissions import CoursePermission
 from education.api.v1.serializers import (
     CourseSerializer,
@@ -108,23 +109,40 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def lessons(self, request, pk=None):
+        """
+        Returns lessons for a given course based on user role and organization access
+        Owners and Admins can view all lessons in the course
+        Instructors can view all lessons only if they own the course
+        Students can view only published lessons
+        If student is not enrolled, content and video_links are hidden
+        Access is restricted to users within the same organization
+        """
+
         course = self.get_object()
         membership = request.membership
 
-        lessons = Lesson.objects.filter(course=course)
+        lessons = LessonService.get_lessons_for_course(
+            membership=membership,
+            course=course
+        )
 
-        if membership.is_student and not membership.is_enrolled_in(course):
-            raise PermissionDenied("You are not enrolled in this course")
-
-        if membership.is_instructor and not membership.owns_course(course):
-            raise PermissionDenied("You can only access your own courses")
-
-        serializer = LessonSerializer(lessons, many=True)
+        serializer = LessonSerializer(
+            lessons,
+            many=True,
+            context={
+                "membership": membership
+            }
+        )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"])
     def enroll(self, request, pk=None):
+        """
+        This api is student specific
+        Only users with student role can enroll into any course
+        """
+
         course = self.get_object()
         membership = request.membership
 
@@ -170,6 +188,10 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def cancel_enrollment(self, request, pk=None):
+        """
+        Only students can cancel their enrollments
+        """
+
         course = self.get_object()
         membership = request.membership
 
@@ -194,8 +216,12 @@ class CourseViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT
         )
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], url_path="give-feedback")
     def feedback(self, request, pk=None):
+        """
+        Only students can give feedback to those courses in which they are enrolled
+        """
+
         serializer = FeedbackCreateSerializer(
             data=request.data,
             context={
@@ -217,6 +243,10 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def enrollment_status(self, request, pk=None):
+        """
+        A 0/1 flag method which tells the user that if he is enrolled in this specific course or not
+        """
+
         course = self.get_object()
         membership = request.membership
 
@@ -232,6 +262,11 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path="enrollments/me")
     def my_enrollments(self, request):
+        """
+        Tells about all the courses in which the user is enrolled
+        This api is student specific
+        """
+
         membership = request.membership
 
         queryset = Enrollment.objects.filter(
@@ -243,7 +278,11 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
-    def feedbacks(self, request, pk=None):
+    def course_feedbacks(self, request, pk=None):
+        """
+        Gives all the feedbacks from all the students given to the specific course
+        """
+
         course = self.get_object()
         queryset = Feedback.objects.filter(
             course=course,
