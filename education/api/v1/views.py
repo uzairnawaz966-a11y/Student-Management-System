@@ -54,6 +54,9 @@ class CourseViewSet(viewsets.ModelViewSet):
         )
         serializer.instance = course
 
+        # able to create for owner/instructor 
+        # not able to create for student/admin 
+
     def perform_update(self, serializer):
         CourseService.update_course(
             membership=self.request.membership,
@@ -234,7 +237,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         queryset = Enrollment.objects.filter(
             student=membership,
             organization=membership.organization
-        ).order_by("-created_at")
+        ).order_by("-enrolled_at")
 
         serializer = EnrollmentSerializer(queryset, many=True)
         return Response(serializer.data)

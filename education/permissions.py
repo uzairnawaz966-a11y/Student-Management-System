@@ -34,7 +34,7 @@ ROLE_ACTIONS = {
 
     "STUDENT": {
         "CourseViewSet": [
-            "list", "retrieve", "enroll", "cancel_enrollment", "lessons",
+            "list", "retrieve", "enroll", "cancel_enrollment", "lessons", "my_enrollments",
             "complete_lesson", "feedback", "enrollment_status", "feedbacks"
         ],
         "LessonViewSet": ["list", "retrieve"]

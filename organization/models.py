@@ -163,7 +163,7 @@ class Membership(TimeStampModel):
         Instructors can view lessons in their own courses
         Students can only view published lessons of courses they're actively enrolled in
         """
-
+        print('can view ----')
         course = lesson.course
 
         if course.organization_id != self.organization_id:
@@ -174,7 +174,6 @@ class Membership(TimeStampModel):
 
         if self.is_instructor:
             return course.instructor_id == self.id
-
         if self.is_student:
             return (
                 course.is_published and
@@ -249,10 +248,12 @@ class OrganizationJoinLink(TimeStampModel):
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
     max_users = models.PositiveIntegerField(null=True, blank=True)
     used_count = models.PositiveIntegerField(default=0)
+    is_expired = models.BooleanField(default=False)
+    expired_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def is_valid(self):
-        return self.status == self.Status.ACTIVE
+        return self.status == self.Status.ACTIVE and self.is_expired == False
 
     def __str__(self):
         return f"{self.organization} - {self.role}"
