@@ -8,7 +8,7 @@ ROLE_ACTIONS = {
         "CourseViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
             "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
-            "feedbacks"
+            "course_feedbacks"
         ],
         "LessonViewSet": [
             "list", "retrieve", "create", "update", "partial_update", "destroy"
@@ -19,7 +19,7 @@ ROLE_ACTIONS = {
         "CourseViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
             "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
-            "feedbacks"
+            "course_feedbacks"
         ],
         "LessonViewSet": [
             "list", "retrieve", "create", "update", "partial_update",
@@ -28,14 +28,14 @@ ROLE_ACTIONS = {
     },
 
     "ADMIN": {
-        "CourseViewSet": ["list", "retrieve", "lessons", "feedbacks"],
+        "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks"],
         "LessonViewSet": ["list", "retrieve"]
     },
 
     "STUDENT": {
         "CourseViewSet": [
             "list", "retrieve", "enroll", "cancel_enrollment", "lessons", "my_enrollments",
-            "complete_lesson", "feedback", "enrollment_status", "feedbacks"
+            "complete_lesson", "feedback", "enrollment_status", "course_feedbacks"
         ],
         "LessonViewSet": ["list", "retrieve"]
     }
@@ -46,13 +46,10 @@ ROLE_ACTIONS = {
 class CoursePermission(BasePermission):
     def has_permission(self, request, view):
         membership = request.membership
-
         role_rules = ROLE_ACTIONS.get(membership.role, {})
-
         allowed_actions = role_rules.get(view.__class__.__name__, [])
 
         return view.action in allowed_actions
-
 
     def has_object_permission(self, request, view, obj):
         membership = request.membership

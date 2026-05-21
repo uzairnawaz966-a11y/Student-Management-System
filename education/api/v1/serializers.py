@@ -42,10 +42,16 @@ class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
+            "id",
             "title",
             "type",
             "description",
-            "instructor_id"
+            "instructor_id",
+            "is_active"
+        ]
+        read_only_fields = [
+            "id",
+            "is_active",
         ]
 
     def validate(self, attrs):
@@ -61,7 +67,7 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             instructor_id = attrs.pop("instructor_id", None)
 
             if not instructor_id:
-                raise serializers.ValidationErrifor("Owner is required to assign any instructor")
+                raise serializers.ValidationError("Owner is required to assign any instructor")
 
             try:
                 instructor = Membership.objects.get(
@@ -104,6 +110,8 @@ class CourseUpdateSerializer(serializers.ModelSerializer):
 
 
 class LessonSerializer(serializers.ModelSerializer):
+    course = serializers.CharField(source="course.title", read_only=True)
+    
     class Meta:
         model = Lesson
         fields = [
@@ -117,9 +125,16 @@ class LessonSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
 
-        if not instance.is_published or not instance.course.is_published:
-            data.pop("content", None)
-            data.pop("video_link", None)
+        membership = self.context.get("membership")
+
+        if membership.is_staff:
+            return data
+
+        if membership.is_student:
+            if not membership.is_enrolled_in(instance.course):
+                data.pop("content", None)
+                data.pop("video_link", None)
+            return data
 
         return data
 

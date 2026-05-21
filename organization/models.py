@@ -163,7 +163,7 @@ class Membership(TimeStampModel):
         Instructors can view lessons in their own courses
         Students can only view published lessons of courses they're actively enrolled in
         """
-        print('can view ----')
+
         course = lesson.course
 
         if course.organization_id != self.organization_id:
