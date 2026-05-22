@@ -1,8 +1,6 @@
 from rest_framework.permissions import BasePermission
 
 
-
-
 ROLE_ACTIONS = {
     "OWNER": {
         "CourseViewSet": [

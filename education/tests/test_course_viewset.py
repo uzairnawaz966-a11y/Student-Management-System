@@ -57,6 +57,11 @@ class CourseViewSetTests(APITestCase):
             password="testuser@123"
         )
 
+        self.non_enrolled_student_user = User.objects.create_user(
+            username="non_enrolled_student",
+            password="testuser@123"
+        )
+
         self.org = Organization.objects.create(
             name="ENIGMATIX",
             owner=self.owner_user
@@ -104,6 +109,13 @@ class CourseViewSetTests(APITestCase):
 
         self.student_membership = Membership.objects.create(
             user=self.student_user,
+            organization=self.org,
+            role=Membership.Role.STUDENT,
+            is_active=True
+        )
+
+        self.non_enrolled_student_membership = Membership.objects.create(
+            user=self.non_enrolled_student_user,
             organization=self.org,
             role=Membership.Role.STUDENT,
             is_active=True
@@ -160,6 +172,12 @@ class CourseViewSetTests(APITestCase):
             video_link="http://test.com/video/",
             order=1,
             status=Lesson.Status.PUBLISHED
+        )
+
+        self.enrollment = Enrollment.objects.create(
+            student=self.student_membership,
+            organization=self.org,
+            course=self.course
         )
 
 
@@ -433,7 +451,6 @@ class CourseViewSetTests(APITestCase):
         self.assertEqual(course.organization, self.org)
         self.assertEqual(course.instructor, self.instructor_membership)
 
-        # make sure no course is in the response that belongs to some other instructor
 
     def test_admin_can_list_courses(self):
         self.authenticate(
@@ -764,3 +781,133 @@ class CourseViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("title", response.data)
+
+# ----------------------- COURSE DELETE TEST CASES -----------------------
+
+    def test_owner_can_delete_draft_courses(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
+        url = reverse("course-detail", args=[self.draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Course.objects.filter(id=self.draft_course.id).exists())
+
+    def test_admin_cannot_delete_course(self):
+        self.authenticate(
+            self.admin_user,
+            self.admin_membership
+        )
+
+        url = reverse("course-detail", args=[self.draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 403)
+
+        self.assertTrue(Course.objects.filter(id=self.draft_course.id))
+
+    def test_instructor_can_delete_own_draft_courses(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
+
+        url = reverse("course-detail", args=[self.draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 204)
+
+        self.assertFalse(Course.objects.filter(id=self.draft_course.id).exists())
+
+    def test_student_cannot_delete_course(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
+
+        url = reverse("course-detail", args=[self.draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 403)
+
+        self.assertTrue(
+            Course.objects.filter(id=self.draft_course.id).exists()
+        )
+
+    def test_unauthorized_user_cannot_delete_course(self):
+
+        url = reverse("course-detail", args=[self.draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 401)
+
+        self.assertTrue(
+            Course.objects.filter(id=self.draft_course.id).exists()
+        )
+
+    def test_instructor_cannot_delete_another_instructor_course(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
+
+        url = reverse("course-detail", args=[self.second_draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 404)
+
+        self.assertTrue(
+            Course.objects.filter(id=self.second_draft_course.id).exists()
+        )
+
+    def test_user_cannot_delete_course_from_another_organization(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
+
+        url = reverse("course-detail", args=[self.second_draft_course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 404)
+
+        self.assertTrue(
+            Course.objects.filter(id=self.second_draft_course.id).exists()
+        )
+
+    def test_published_course_cannot_be_deleted(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
+
+        url = reverse("course-detail", args=[self.course.id])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertTrue(
+            Course.objects.filter(id=self.course.id).exists()
+        )
+
+    def test_non_existing_course_delete_returns_404(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
+
+        url = reverse("course-detail", args=[9999])
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, 404)
