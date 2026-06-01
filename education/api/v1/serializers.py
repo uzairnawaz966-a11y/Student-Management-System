@@ -214,13 +214,8 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "is_cancelled"
         ]
 
+class EnrollmentCreateSerializer(serializers.Serializer):
 
-class EnrollmentCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Enrollment
-        fields = []
-
-    @transaction.atomic
     def create(self, validated_data):
         request = self.context["request"]
         membership = request.membership
@@ -240,9 +235,7 @@ class EnrollmentCreateSerializer(serializers.ModelSerializer):
         enrollment, created = Enrollment.objects.get_or_create(
             student=membership,
             course=course,
-            defaults={
-                "organization": membership.organization
-            }
+            defaults={"organization": membership.organization}
         )
 
         if not created:
