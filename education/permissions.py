@@ -26,7 +26,7 @@ ROLE_ACTIONS = {
     },
 
     "ADMIN": {
-        "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks"],
+        "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks", "course_enrollments"],
         "LessonViewSet": ["list", "retrieve"]
     },
 
