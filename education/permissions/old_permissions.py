@@ -1,64 +1,63 @@
-from rest_framework.permissions import BasePermission
+# from rest_framework.permissions import BasePermission
+
+# ROLE_ACTIONS = {
+#     "OWNER": {
+#         "CourseViewSet": [
+#             "list", "retrieve", "create", "update", "partial_update",
+#             "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
+#             "course_feedbacks"
+#         ],
+#         "LessonViewSet": [
+#             "list", "retrieve", "create", "update", "partial_update", "destroy"
+#         ]
+#     },
+
+#     "INSTRUCTOR": {
+#         "CourseViewSet": [
+#             "list", "retrieve", "create", "update", "partial_update",
+#             "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
+#             "course_feedbacks"
+#         ],
+#         "LessonViewSet": [
+#             "list", "retrieve", "create", "update", "partial_update",
+#             "destroy"
+#         ]
+#     },
+
+#     "ADMIN": {
+#         "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks", "course_enrollments"],
+#         "LessonViewSet": ["list", "retrieve"]
+#     },
+
+#     "STUDENT": {
+#         "CourseViewSet": [
+#             "list", "retrieve", "enroll", "cancel_enrollment", "lessons", "my_enrollments",
+#             "complete_lesson", "feedback", "enrollment_status", "course_feedbacks"
+#         ],
+#         "LessonViewSet": ["list", "retrieve"]
+#     }
+# }
 
 
-ROLE_ACTIONS = {
-    "OWNER": {
-        "CourseViewSet": [
-            "list", "retrieve", "create", "update", "partial_update",
-            "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
-            "course_feedbacks"
-        ],
-        "LessonViewSet": [
-            "list", "retrieve", "create", "update", "partial_update", "destroy"
-        ]
-    },
 
-    "INSTRUCTOR": {
-        "CourseViewSet": [
-            "list", "retrieve", "create", "update", "partial_update",
-            "destroy", "publish", "create_lesson", "lessons", "course_enrollments",
-            "course_feedbacks"
-        ],
-        "LessonViewSet": [
-            "list", "retrieve", "create", "update", "partial_update",
-            "destroy"
-        ]
-    },
+# class CoursePermission(BasePermission):
+#     def has_permission(self, request, view):
+#         membership = request.membership
+#         role_rules = ROLE_ACTIONS.get(membership.role, {})
+#         allowed_actions = role_rules.get(view.__class__.__name__, [])
 
-    "ADMIN": {
-        "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks"],
-        "LessonViewSet": ["list", "retrieve"]
-    },
+#         return view.action in allowed_actions
 
-    "STUDENT": {
-        "CourseViewSet": [
-            "list", "retrieve", "enroll", "cancel_enrollment", "lessons", "my_enrollments",
-            "complete_lesson", "feedback", "enrollment_status", "course_feedbacks"
-        ],
-        "LessonViewSet": ["list", "retrieve"]
-    }
-}
+#     def has_object_permission(self, request, view, obj):
+#         membership = request.membership
 
+#         if view.__class__.__name__ == "CourseViewSet":
+#             return membership.can_view_course(obj)
 
+#         if view.__class__.__name__ == "LessonViewSet":
+#             return membership.can_view_course(obj.course)
 
-class CoursePermission(BasePermission):
-    def has_permission(self, request, view):
-        membership = request.membership
-        role_rules = ROLE_ACTIONS.get(membership.role, {})
-        allowed_actions = role_rules.get(view.__class__.__name__, [])
-
-        return view.action in allowed_actions
-
-    def has_object_permission(self, request, view, obj):
-        membership = request.membership
-
-        if view.__class__.__name__ == "CourseViewSet":
-            return membership.can_view_course(obj)
-
-        if view.__class__.__name__ == "LessonViewSet":
-            return membership.can_view_course(obj.course)
-
-        return False
+#         return False
 
 
 

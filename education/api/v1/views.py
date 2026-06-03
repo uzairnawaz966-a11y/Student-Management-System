@@ -7,7 +7,8 @@ from rest_framework import viewsets, mixins
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from education.services.lesson_service import LessonService
-from education.permissions import CoursePermission
+from education.permissions.course_permission import CoursePermission
+from education.permissions.lesson_permission import LessonPermission
 from education.api.v1.serializers import (
     CourseSerializer,
     CourseCreateSerializer,
@@ -37,7 +38,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return CourseCreateSerializer
-        
+
         if self.action in ['update', 'partial_update']:
             return CourseUpdateSerializer
 
@@ -55,9 +56,6 @@ class CourseViewSet(viewsets.ModelViewSet):
         )
         serializer.instance = course
 
-        # able to create for owner/instructor 
-        # not able to create for student/admin 
-
     def perform_update(self, serializer):
         CourseService.update_course(
             membership=self.request.membership,
@@ -70,7 +68,6 @@ class CourseViewSet(viewsets.ModelViewSet):
             membership=self.request.membership,
             instance=instance
         )
-
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
@@ -88,24 +85,22 @@ class CourseViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path="create-lesson")
     def create_lesson(self, request, pk=None):
         course = self.get_object()
-        membership = request.membership
 
-        if membership.can_edit_course(course):
+        serializer = LessonCreateSerializer(
+            data=request.data,
+            context={
+                "request": request,
+                "course": course
+            }
+        )
 
-            serializer = LessonCreateSerializer(
-                data=request.data,
-                context = {
-                    "request": request,
-                    "course": course
-                }
-            )
-            serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-            serializer.save()
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            raise PermissionDenied("You cannot create lessons for this course")
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 
     @action(detail=True, methods=["get"])
     def lessons(self, request, pk=None):
@@ -138,65 +133,44 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def enroll(self, request, pk=None):
-        """
-        This api is student specific
-        Only users with student role can enroll into any course
-        """
+        serializer = EnrollmentCreateSerializer(
+            data={},
+            context={
+                "request": request,
+                "view": self
+            }
+        )
 
-        course = self.get_object()
-        membership = request.membership
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        if membership.can_enroll_in(course):
-
-            serializer = EnrollmentCreateSerializer(
-                data={},
-                context={
-                    "request": request,
-                    "view": self
-                }
-            )
-            serializer.is_valid(raise_exception=True)
-
-            serializer.save()
-
-            return Response(
-                    {
-                        "message": "You are enrolled successfully"
-                    },
-                status=status.HTTP_201_CREATED
-            )
-        else:
-            raise PermissionDenied("You cannot enroll in unpublished or inactive courses")
+        return Response(
+            {
+                "message": "You are enrolled successfully"
+            },
+            status=status.HTTP_201_CREATED
+        )
 
     @action(detail=True, methods=["get"])
     def course_enrollments(self, request, pk=None):
-        """
-        This API is only for instructor
-        Gives all the enrollments of those students who has enrolled in this specific course
-        """
-
         course = self.get_object()
-        membership = request.membership
 
-        if membership.can_view_enrollments_for(course):
-            queryset = Enrollment.objects.filter(course=course)
+        queryset = Enrollment.objects.filter(course=course)
 
-            serializer = EnrollmentSerializer(queryset, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            raise PermissionDenied("You are not allowed to access this api")
+        serializer = EnrollmentSerializer(
+            queryset,
+            many=True
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=['post'])
     def cancel_enrollment(self, request, pk=None):
-        """
-        Only students can cancel their enrollments
-        """
-
         course = self.get_object()
         membership = request.membership
-
-        if not membership.is_student:
-            raise PermissionDenied("You cannot perform this action")
 
         try:
             enrollment = Enrollment.objects.get(
@@ -205,7 +179,9 @@ class CourseViewSet(viewsets.ModelViewSet):
                 organization=membership.organization
             )
         except Enrollment.DoesNotExist:
-            raise ValidationError("You are not enrolled in this course")
+            raise ValidationError(
+                "You are not enrolled in this course"
+            )
 
         enrollment.delete()
 
@@ -300,6 +276,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
 class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+    permission_classes = [IsAuthenticated, LessonPermission]
 
     def get_serializer_class(self):
         if self.action == 'partial_update':
