@@ -290,19 +290,12 @@ class FeedbackCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         request = self.context.get("request")
         membership = request.membership
-        course_pk = self.context.get("view").kwargs.get("pk")
-
-        try:
-            course = Course.objects.get(
-                pk=course_pk
-            )
-        except Course.DoesNotExist:
-            raise serializers.ValidationError("Course not found")
+        course = self.context["course"]
 
         if not membership.is_enrolled_in(course):
             raise serializers.ValidationError("You can only give feedback to those courses in which you are enrolled")
 
-        attrs["course_id"] = course_pk
+        attrs["course_id"] = course.id
 
         return attrs
 
