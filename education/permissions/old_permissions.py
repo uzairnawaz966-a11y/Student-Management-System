@@ -24,10 +24,10 @@
 #         ]
 #     },
 
-#     "ADMIN": {
-#         "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks", "course_enrollments"],
-#         "LessonViewSet": ["list", "retrieve"]
-#     },
+    "ADMIN": {
+        "CourseViewSet": ["list", "retrieve", "lessons", "course_feedbacks", "course_enrollments"],
+        "LessonViewSet": ["list", "retrieve"]
+    },
 
 #     "STUDENT": {
 #         "CourseViewSet": [

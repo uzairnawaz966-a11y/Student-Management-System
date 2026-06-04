@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase
 from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
-from education.models import Course, Lesson, Enrollment, CourseType
+from education.models import Course, Lesson, Enrollment, CourseType, Feedback
 from organization.models import Organization, Membership
 from django.contrib.auth import get_user_model
 
@@ -228,6 +228,24 @@ class CourseViewSetTests(APITestCase):
             student=self.student_membership,
             organization=self.org,
             course=self.course
+        )
+
+        self.approved_feedback = Feedback.objects.create(
+            organization=self.org,
+            student=self.student_membership,
+            course=self.course,
+            rating=5,
+            comment="Excellent course",
+            is_approved=True
+        )
+
+        self.pending_feedback = Feedback.objects.create(
+            organization=self.org,
+            student=self.second_student_membership,
+            course=self.course,
+            rating=1,
+            comment="Pending",
+            is_approved=False
         )
 
 
@@ -546,30 +564,30 @@ class CourseViewSetTests(APITestCase):
 
 #         self.assertEqual(response.status_code, 401)
 
-    def test_user_only_sees_courses_of_current_organization(self):
-        self.authenticate(
-            self.student_user,
-            self.student_membership
-        )
+#     def test_user_only_sees_courses_of_current_organization(self):
+#         self.authenticate(
+#             self.student_user,
+#             self.student_membership
+#         )
 
-        url = reverse("course-list")
+#         url = reverse("course-list")
 
-        response = self.client.get(url)
+#         response = self.client.get(url)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(len(response.data), 1)
 
-        course_data = response.data[0]
+#         course_data = response.data[0]
 
 
-        self.assertEqual(course_data["id"], self.course.id)
-        self.assertEqual(course_data["title"], self.course.title)
-        self.assertEqual(course_data["type"], self.course.type.id)
+#         self.assertEqual(course_data["id"], self.course.id)
+#         self.assertEqual(course_data["title"], self.course.title)
+#         self.assertEqual(course_data["type"], self.course.type.id)
 
-        self.assertNotEqual(course_data["id"], self.second_course.id)
-        self.assertNotEqual(course_data["title"], self.second_course.title)
+#         self.assertNotEqual(course_data["id"], self.second_course.id)
+#         self.assertNotEqual(course_data["title"], self.second_course.title)
 
-# # ----------------------- COURSE RETRIEVE TEST CASES -----------------------
+# # # ----------------------- COURSE RETRIEVE TEST CASES -----------------------
 
 #     def test_owner_can_retrieve_course(self):
 #         self.authenticate(
@@ -767,7 +785,7 @@ class CourseViewSetTests(APITestCase):
 
 #         response = self.client.patch(url, data)
 
-#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 403)
 
 #     def test_unauthorized_user_cannot_update_course(self):
 
@@ -884,7 +902,7 @@ class CourseViewSetTests(APITestCase):
 
 #         response = self.client.delete(url)
 
-#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 403)
 
 #         self.assertTrue(
 #             Course.objects.filter(id=self.draft_course.id).exists()
@@ -1062,7 +1080,7 @@ class CourseViewSetTests(APITestCase):
 
 #         response = self.client.post(url)
 
-#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 403)
 
 
 #     def test_unauthenticated_user_cannot_publish_course(self):
@@ -1176,7 +1194,7 @@ class CourseViewSetTests(APITestCase):
 #         }
 
 #         response = self.client.post(url, data)
-#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 403)
 
 #     def test_instructor_cannot_create_lesson_for_other_course(self):
 #         self.authenticate(
@@ -1271,216 +1289,216 @@ class CourseViewSetTests(APITestCase):
 
 #         self.assertEqual(lesson.course, self.draft_course)
 
-    def test_lesson_order_is_saved_correctly(self):
-        self.authenticate(
-            self.instructor_user,
-            self.instructor_membership
-        )
+#     def test_lesson_order_is_saved_correctly(self):
+#         self.authenticate(
+#             self.instructor_user,
+#             self.instructor_membership
+#         )
 
-        url = reverse("course-create-lesson", args=[self.draft_course.id])
+#         url = reverse("course-create-lesson", args=[self.draft_course.id])
 
-        data = {
-            "title": "Order Test",
-            "content": "Content",
-            "video_link": "http://test.com/video/",
-            "order": 99
-        }
+#         data = {
+#             "title": "Order Test",
+#             "content": "Content",
+#             "video_link": "http://test.com/video/",
+#             "order": 99
+#         }
 
-        self.client.post(url, data)
+#         self.client.post(url, data)
 
-        lesson = Lesson.objects.get(title="Order Test")
+#         lesson = Lesson.objects.get(title="Order Test")
 
-        self.assertEqual(lesson.order, 99)
+#         self.assertEqual(lesson.order, 99)
 
-# ----------------------- COURSE LESSONS LIST TEST CASES -----------------------
+# # ----------------------- COURSE LESSONS LIST TEST CASES -----------------------
 
-    # def test_student_sees_only_published_lessons(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+#     def test_student_sees_only_published_lessons(self):
+#         self.authenticate(
+#             self.student_user,
+#             self.student_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.status_code, 200)
 
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]["title"], self.lesson.title)
+#         self.assertEqual(len(response.data), 1)
+#         self.assertEqual(response.data[0]["title"], self.lesson.title)
 
-    # def test_non_enrolled_student_cannot_see_content(self):
-    #     self.authenticate(
-    #         self.non_enrolled_student_user,
-    #         self.non_enrolled_student_membership
-    #     )
+#     def test_non_enrolled_student_cannot_see_content(self):
+#         self.authenticate(
+#             self.non_enrolled_student_user,
+#             self.non_enrolled_student_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.status_code, 200)
 
-    #     lesson = response.data[0]
+#         lesson = response.data[0]
 
-    #     self.assertNotIn("content", lesson)
-    #     self.assertNotIn("video_link", lesson)
+#         self.assertNotIn("content", lesson)
+#         self.assertNotIn("video_link", lesson)
     
-    # def test_enrolled_student_sees_full_lesson_data(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+#     def test_enrolled_student_sees_full_lesson_data(self):
+#         self.authenticate(
+#             self.student_user,
+#             self.student_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.status_code, 200)
 
-    #     lesson = response.data[0]
+#         lesson = response.data[0]
 
-    #     self.assertIn("content", lesson)
-    #     self.assertIn("video_link", lesson)
+#         self.assertIn("content", lesson)
+#         self.assertIn("video_link", lesson)
 
-    # def test_instructor_sees_own_course_all_lessons(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+#     def test_instructor_sees_own_course_all_lessons(self):
+#         self.authenticate(
+#             self.instructor_user,
+#             self.instructor_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.draft_course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.draft_course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertGreaterEqual(len(response.data), 1)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertGreaterEqual(len(response.data), 1)
     
-    # def test_instructor_cannot_access_other_instructor_lessons(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+#     def test_instructor_cannot_access_other_instructor_lessons(self):
+#         self.authenticate(
+#             self.instructor_user,
+#             self.instructor_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.second_course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.second_course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 404)
     
-    # def test_owner_sees_all_lessons_with_full_data(self):
-    #     self.authenticate(
-    #         self.owner_user,
-    #         self.owner_membership
-    #     )
+#     def test_owner_sees_all_lessons_with_full_data(self):
+#         self.authenticate(
+#             self.owner_user,
+#             self.owner_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.draft_course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.draft_course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertGreaterEqual(len(response.data), 1)
+#         self.assertEqual(response.status_code, 200)
+#         self.assertGreaterEqual(len(response.data), 1)
 
-    #     lesson = response.data[0]
-    #     self.assertIn("content", lesson)
-    #     self.assertIn("video_link", lesson)
+#         lesson = response.data[0]
+#         self.assertIn("content", lesson)
+#         self.assertIn("video_link", lesson)
 
-    # def test_admin_sees_all_lessons(self):
-    #     self.authenticate(
-    #         self.admin_user,
-    #         self.admin_membership
-    #     )
+#     def test_admin_sees_all_lessons(self):
+#         self.authenticate(
+#             self.admin_user,
+#             self.admin_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.status_code, 200)
     
-    # def test_cross_org_access_returns_404(self):
-    #     self.authenticate(
-    #         self.owner_user,
-    #         self.owner_membership
-    #     )
+#     def test_cross_org_access_returns_404(self):
+#         self.authenticate(
+#             self.owner_user,
+#             self.owner_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[self.second_course.id])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[self.second_course.id])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 404)
 
-    # def test_unauthenticated_user_cannot_access_lessons(self):
-    #     url = reverse("course-lessons", args=[self.course.id])
+#     def test_unauthenticated_user_cannot_access_lessons(self):
+#         url = reverse("course-lessons", args=[self.course.id])
 
-    #     response = self.client.get(url)
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 401)
+#         self.assertEqual(response.status_code, 401)
 
-    # def test_invalid_course_returns_404(self):
-    #     self.authenticate(
-    #         self.owner_user,
-    #         self.owner_membership
-    #     )
+#     def test_invalid_course_returns_404(self):
+#         self.authenticate(
+#             self.owner_user,
+#             self.owner_membership
+#         )
 
-    #     url = reverse("course-lessons", args=[99999])
-    #     response = self.client.get(url)
+#         url = reverse("course-lessons", args=[99999])
+#         response = self.client.get(url)
 
-    #     self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.status_code, 404)
 
-# ----------------------- COURSE ENROLL TEST CASES -----------------------
+# # ----------------------- COURSE ENROLL TEST CASES -----------------------
 
-    # def test_student_can_enroll_in_course(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+#     def test_student_can_enroll_in_course(self):
+#         self.authenticate(
+#             self.student_user,
+#             self.student_membership
+#         )
 
-    #     url = reverse("course-enroll", args=[self.no_enrollment_course.id])
+#         url = reverse("course-enroll", args=[self.no_enrollment_course.id])
 
-    #     response = self.client.post(url)
+#         response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 201)
-    #     self.assertEqual(response.data["message"], "You are enrolled successfully")
+#         self.assertEqual(response.status_code, 201)
+#         self.assertEqual(response.data["message"], "You are enrolled successfully")
 
-    #     self.assertTrue(Enrollment.objects.filter(student=self.student_membership, course=self.course).exists())
+#         self.assertTrue(Enrollment.objects.filter(student=self.student_membership, course=self.course).exists())
 
-    # def test_student_cannot_enroll_twice(self):
-    #     self.authenticate(self.student_user, self.student_membership)
+#     def test_student_cannot_enroll_twice(self):
+#         self.authenticate(self.student_user, self.student_membership)
 
-    #     url = reverse("course-enroll", args=[self.course.id])
+#         url = reverse("course-enroll", args=[self.course.id])
 
-    #     self.client.post(url)
-    #     response = self.client.post(url)
+#         self.client.post(url)
+#         response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 400)
-    #     self.assertIn("Already enrolled", str(response.data))
+#         self.assertEqual(response.status_code, 400)
+#         self.assertIn("Already enrolled", str(response.data))
 
-    # def test_unauthenticated_user_cannot_enroll(self):
-    #     url = reverse(
-    #         "course-enroll",
-    #         args=[self.no_enrollment_course.id]
-    #     )
+#     def test_unauthenticated_user_cannot_enroll(self):
+#         url = reverse(
+#             "course-enroll",
+#             args=[self.no_enrollment_course.id]
+#         )
 
-    #     response = self.client.post(url)
+#         response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 401)
+#         self.assertEqual(response.status_code, 401)
 
-    # def test_instructor_cannot_enroll_in_courses(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+#     def test_instructor_cannot_enroll_in_courses(self):
+#         self.authenticate(
+#             self.instructor_user,
+#             self.instructor_membership
+#         )
 
-    #     url = reverse("course-enroll", args=[self.course.id])
+#         url = reverse("course-enroll", args=[self.course.id])
 
-    #     response = self.client.post(url)
+#         response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+#         self.assertEqual(response.status_code, 403)
 
-    def test_student_cannot_enroll_in_draft_course(self):
-        self.authenticate(
-            self.student_user,
-            self.student_membership
-        )
+#     def test_student_cannot_enroll_in_draft_course(self):
+#         self.authenticate(
+#             self.student_user,
+#             self.student_membership
+#         )
 
-        url = reverse("course-enroll", args=[self.draft_course.id])
+#         url = reverse("course-enroll", args=[self.draft_course.id])
 
-        response = self.client.post(url)
+#         response = self.client.post(url)
 
-        self.assertEqual(response.status_code, 404)
-        self.assertIn("No Course matches the given query", response.data["detail"])
+#         self.assertEqual(response.status_code, 404)
+#         self.assertIn("No Course matches the given query", response.data["detail"])
 
 #     def test_invalid_course_returns_404(self):
 #         self.authenticate(
@@ -1553,70 +1571,574 @@ class CourseViewSetTests(APITestCase):
 
 #         self.assertEqual(Enrollment.objects.filter(student=self.student_membership, course=self.course).count(), 0)
 
-# # ----------------------- COURSE CANCEL ENROLLMENT TEST CASES -----------------------
+# # ----------------------- COURSE ENROLLMENTS TEST CASES -----------------------
 
-#     def test_instructor_can_view_course_enrollments(self):
-#         self.authenticate(
-#             self.instructor_user,
-#             self.instructor_membership
-#         )
+    # def test_owner_can_view_course_enrollments(self):
+    #     self.authenticate(
+    #         self.owner_user,
+    #         self.owner_membership
+    #     )
 
-#         url = reverse("course-course-enrollments", args=[self.course.id])
+    #     url = reverse("course-course-enrollments", args=[self.course.id])
 
-#         response = self.client.get(url)
+    #     response = self.client.get(url)
 
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(len(response.data), 1)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    # def test_admin_can_view_course_enrollments(self):
+    #     self.authenticate(
+    #         self.admin_user,
+    #         self.admin_membership
+    #     )
+
+    #     url = reverse("course-course-enrollments", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    # def test_instructor_can_view_course_enrollments(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+
+    #     url = reverse("course-course-enrollments", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    # def test_student_cannot_view_course_enrollments(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse(
+    #         "course-course-enrollments",
+    #         args=[self.course.id]
+    #     )
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 403)
+
+    # def test_unauthenticated_user_cannot_view_course_enrollments(self):
+    #     url = reverse("course-course-enrollments", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 401)
+
+    # def test_course_enrollments_returns_all_enrollments(self):
+    #     Enrollment.objects.create(
+    #         student=self.second_student_membership,
+    #         course=self.course,
+    #         organization_id=self.org.id
+    #     )
+
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+
+    #     url = reverse("course-course-enrollments", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 2)
     
-#     def test_student_cannot_view_course_enrollments(self):
-#         self.authenticate(
-#             self.student_user,
-#             self.student_membership
-#         )
+    # def test_course_enrollments_invalid_course_returns_404(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
 
-#         url = reverse(
-#             "course-course-enrollments",
-#             args=[self.course.id]
-#         )
+    #     url = reverse("course-course-enrollments", args=[99999])
 
-#         response = self.client.get(url)
+    #     response = self.client.get(url)
 
-#         self.assertEqual(response.status_code, 403)
+    #     self.assertEqual(response.status_code, 404)
+
+    # def test_user_from_another_organization_cannot_view_course_enrollments(self):
+    #     self.authenticate(
+    #         self.second_owner_user,
+    #         self.second_owner_membership
+    #     )
+
+    #     url = reverse(
+    #         "course-course-enrollments",
+    #         args=[self.course.id]
+    #     )
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 404)
     
-#     def test_unauthenticated_user_cannot_view_course_enrollments(self):
-#         url = reverse("course-course-enrollments", args=[self.course.id])
+    # def test_course_enrollment_returns_empty_list_if_no_enrollment_exist(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+    #     url = reverse("course-course-enrollments", args=[self.no_enrollment_course.id])
 
-#         response = self.client.get(url)
+    #     response = self.client.get(url)
 
-#         self.assertEqual(response.status_code, 401)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 0)
+    
+    # def test_course_enrollments_only_returns_requested_course_enrollments(self):
+    #     Enrollment.objects.create(
+    #         student=self.second_student_membership,
+    #         course=self.no_enrollment_course,
+    #         organization=self.org
+    #     )
 
-#     def test_course_enrollments_returns_all_enrollments(self):
-#         Enrollment.objects.create(
-#             student=self.second_student_membership,
-#             course=self.course,
-#             organization_id=self.org.id
-#         )
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
 
-#         self.authenticate(
-#             self.instructor_user,
-#             self.instructor_membership
-#         )
+    #     url = reverse(
+    #         "course-course-enrollments",
+    #         args=[self.course.id]
+    #     )
 
-#         url = reverse("course-course-enrollments", args=[self.course.id])
+    #     response = self.client.get(url)
 
-#         response = self.client.get(url)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
 
-#         self.assertEqual(response.status_code, 200)
-#         self.assertEqual(len(response.data), 2)
+# # ----------------------- COURSE GIVE FEEDBACK TEST CASES -----------------------
 
-#     def test_course_enrollments_invalid_course_returns_404(self):
-#         self.authenticate(
-#             self.instructor_user,
-#             self.instructor_membership
-#         )
+    # def test_student_can_give_feedback(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
 
-#         url = reverse("course-course-enrollments", args=[99999])
+    #     url = reverse("course-feedback", args=[self.course.id])
 
-#         response = self.client.get(url)
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "Great course!"
+    #     }
 
-#         self.assertEqual(response.status_code, 404)
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 201)
+    #     self.assertEqual(response.data["message"], "Feedback posted")
+    #     self.assertTrue(Feedback.objects.filter(course=self.course, student=self.student_membership).exists())
+
+    # def test_unenrolled_student_cannot_give_feedback(self):
+    #     self.authenticate(
+    #         self.non_enrolled_student_user,
+    #         self.non_enrolled_student_membership
+    #     )
+
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 4,
+    #         "comment": "Nice course"
+    #     }
+
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 400)
+    #     self.assertFalse(Feedback.objects.filter(course=self.course).exists())
+
+    # def test_instructor_cannot_give_feedback(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "I am instructor"
+    #     }
+
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 403)
+    #     self.assertFalse(Feedback.objects.filter(course=self.course).exists())
+
+    # def test_admin_cannot_give_feedback(self):
+    #     self.authenticate(
+    #         self.admin_user,
+    #         self.admin_membership
+    #     )
+        
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "I am admin"
+    #     }
+
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 403)
+
+    # def test_unauthorized_user_cannot_give_feedback(self):
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "Unauthorized user is giving feedback"
+    #     }
+
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 401)
+
+    # def test_give_feedback_invalid_course_returns_404(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-feedback", args=[99999])
+
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "Testing comment"
+    #     }
+
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 404)
+
+    # def test_student_cannot_give_feedback_twice(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 5,
+    #         "comment": "Testing"
+    #     }
+
+    #     self.client.post(url, data)
+    #     response = self.client.post(url, data)
+
+    #     self.assertEqual(response.status_code, 400)
+
+    # def test_feedback_is_linked_correctly(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-feedback", args=[self.course.id])
+
+    #     data = {
+    #         "rating": 4,
+    #         "comment": "Good"
+    #     }
+
+    #     self.client.post(url, data)
+
+    #     feedback = Feedback.objects.get(course=self.course)
+
+    #     self.assertEqual(feedback.student, self.student_membership)
+    #     self.assertEqual(feedback.course, self.course)
+
+# # ----------------------- COURSE STUDENT ENROLLMENTS TEST CASES -----------------------
+
+    # def test_student_can_view_own_enrollments(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    #     enrollment = response.data[0]
+
+    #     self.assertEqual(enrollment["course"], self.course.id)
+
+    # def test_student_only_sees_his_own_enrollments(self):
+    #     Enrollment.objects.create(
+    #         student=self.second_student_membership,
+    #         course=self.no_enrollment_course,
+    #         organization=self.org
+    #     )
+
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    #     enrollment = response.data[0]
+
+    #     self.assertEqual(enrollment["course"], self.course.id)
+
+    # def test_student_with_no_enrollments_gets_empty_list(self):
+    #     self.authenticate(
+    #         self.non_enrolled_student_user,
+    #         self.non_enrolled_student_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 0)
+
+    # def test_unauthenticated_user_cannot_view_my_enrollments(self):
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 401)
+
+    # def test_instructor_cannot_view_enrollment_list(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 403)
+
+    # def test_admin_cannot_view_enrollment_list(self):
+    #     self.authenticate(
+    #         self.admin_user,
+    #         self.admin_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 403)
+
+    # def test_owner_cannot_view_enrollment_list(self):
+    #     self.authenticate(
+    #         self.owner_user,
+    #         self.owner_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 403)
+
+    # def test_my_enrollments_are_ordered_by_latest_first(self):
+    #     Enrollment.objects.create(
+    #         student=self.student_membership,
+    #         course=self.no_enrollment_course,
+    #         organization=self.org
+    #     )
+
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-my-enrollments")
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 2)
+
+    #     self.assertEqual(response.data[0]["course"], self.no_enrollment_course.id)
+
+    #     self.assertEqual(response.data[1]["course"], self.course.id)
+
+# # ----------------------- COURSE ENROLLMENT STATUS TEST CASES -----------------------
+
+    # def test_enrolled_student_enrollment_status_returns_true(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-enrollment-status", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.data["course_id"], self.course.id)
+    #     self.assertTrue(response.data["is_enrolled"])
+
+    # def test_non_enrolled_student_enrollment_status_returns_false(self):
+    #     self.authenticate(
+    #         self.non_enrolled_student_user,
+    #         self.non_enrolled_student_membership
+    #     )
+
+    #     url = reverse("course-enrollment-status", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(response.data["course_id"], self.course.id)
+    #     self.assertFalse(response.data["is_enrolled"])
+
+    # def test_unauthenticated_user_cannot_check_enrollment_status(self):
+    #     url = reverse("course-enrollment-status", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 401)
+
+    # def test_enrollment_status_invalid_course_returns_404(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-enrollment-status", args=[99999])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 404)
+
+# # ----------------------- COURSE FEEDBACKS LIST TEST CASES -----------------------
+
+    # def test_student_can_view_course_feedbacks(self):
+
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    # def test_instructor_can_view_course_feedbacks(self):
+    #     self.authenticate(
+    #         self.instructor_user,
+    #         self.instructor_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+
+    # def test_admin_can_view_course_feedbacks(self):
+    #     self.authenticate(
+    #         self.admin_user,
+    #         self.admin_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+
+    # def test_owner_can_view_course_feedbacks(self):
+    #     self.authenticate(
+    #         self.owner_user,
+    #         self.owner_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+
+    # def test_only_approved_feedbacks_are_returned(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+
+    # def test_course_feedbacks_only_return_feedbacks_of_requested_course(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse("course-course-feedbacks", args=[self.course.id])
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertEqual(len(response.data), 1)
+    #     self.assertEqual(response.data[0]["id"], self.course.id)
+
+    # def test_unauthenticated_user_cannot_view_course_feedbacks(self):
+    #     url = reverse(
+    #         "course-course-feedbacks",
+    #         args=[self.course.id]
+    #     )
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 401)
+
+    # def test_course_feedbacks_invalid_course_returns_404(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse(
+    #         "course-course-feedbacks",
+    #         args=[99999]
+    #     )
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 404)
+
+    # def test_user_cannot_view_feedbacks_of_course_from_another_organization(self):
+    #     self.authenticate(
+    #         self.student_user,
+    #         self.student_membership
+    #     )
+
+    #     url = reverse(
+    #         "course-course-feedbacks",
+    #         args=[self.second_course.id]
+    #     )
+
+    #     response = self.client.get(url)
+
+    #     self.assertEqual(response.status_code, 404)

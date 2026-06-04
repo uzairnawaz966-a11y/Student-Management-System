@@ -202,7 +202,7 @@ class CourseViewSet(viewsets.ModelViewSet):
             data=request.data,
             context={
                 "request": request,
-                "view": self
+                "course": self.get_object()
             }
         )
         serializer.is_valid(raise_exception=True)
