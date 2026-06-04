@@ -37,7 +37,7 @@ class CourseManager(models.Manager):
     def get_active_courses(self, membership):
 
         queryset = self.active().filter(
-            organization=membership.organization_id
+            organization_id=membership.organization_id
         )
 
         if membership.is_owner or membership.is_admin:
@@ -45,7 +45,7 @@ class CourseManager(models.Manager):
         elif membership.is_instructor:
             return queryset.filter(instructor=membership)
         elif membership.is_student:
-            return queryset.filter(status=Course.Status.PUBLISHED)
+            return queryset.filter(status=Course.Status.PUBLISHED, is_active=True)
         return self.none()
 
 

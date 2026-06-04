@@ -202,13 +202,17 @@ class Membership(TimeStampModel):
         """
         Only students can enroll, and only in courses that are published, active, and in their organization
         """
-        if course.organization_id != self.organization_id:
-            return False
 
         if not self.is_student:
             return False
 
-        return course.is_published and course.is_active
+        if course.organization_id != self.organization_id:
+            return False
+
+        return (
+            course.is_active and
+            course.status == course.Status.PUBLISHED
+        )
 
 
     def can_view_enrollments_for(self, course):
@@ -230,6 +234,35 @@ class Membership(TimeStampModel):
         
         return False
 
+    def can_create_lesson(self, course):
+        return self.can_edit_course(course)
+    
+    def can_view_lessons(self, course):
+        if course.organization_id != self.organization_id:
+            return False
+
+        if self.is_owner or self.is_admin:
+            return True
+
+        if self.is_instructor:
+            return course.instructor_id == self.id
+
+        if self.is_student:
+            return course.is_published and course.is_active
+
+        return False
+
+    def can_cancel_enrollment(self, course):
+        return self.is_student
+
+    def can_view_course_feedbacks(self, course):
+        return self.can_view_course(course)
+
+    def can_view_enrollment_status(self, course):
+        return self.can_view_course(course)
+
+    def can_view_my_enrollments(self):
+        return self.is_student
 
     def __str__(self):
         return f"{self.user.username} ( {self.role} ) - {self.organization.name}"
