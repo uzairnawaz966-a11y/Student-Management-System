@@ -31,21 +31,23 @@ class CourseManager(models.Manager):
     It returns the data according to the user role
     """
 
-    def active(self):
-        return self.filter(is_active=True)
-
     def get_active_courses(self, membership):
-
-        queryset = self.active().filter(
-            organization_id=membership.organization_id
+        queryset = self.filter(
+            organization_id=membership.organization_id,
+            is_active=True
         )
 
         if membership.is_owner or membership.is_admin:
             return queryset
-        elif membership.is_instructor:
-            return queryset.filter(instructor=membership)
-        elif membership.is_student:
-            return queryset.filter(status=Course.Status.PUBLISHED, is_active=True)
+
+        if membership.is_instructor:
+            return queryset.filter(instructor_id=membership.id)
+
+        if membership.is_student:
+            return queryset.filter(
+                status=Course.Status.PUBLISHED
+            )
+
         return self.none()
 
 

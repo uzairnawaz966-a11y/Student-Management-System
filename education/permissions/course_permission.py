@@ -37,7 +37,4 @@ class CoursePermission(BasePermission):
         if permission_method is None:
             return True
 
-        return getattr(
-            membership,
-            permission_method
-        )(obj)
+        return getattr(membership, permission_method)(obj)
