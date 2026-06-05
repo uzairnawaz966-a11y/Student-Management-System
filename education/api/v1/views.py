@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import viewsets, mixins
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.permissions import IsAuthenticated
 from education.services.lesson_service import LessonService
 from education.permissions.course_permission import CoursePermission
@@ -179,7 +179,7 @@ class CourseViewSet(viewsets.ModelViewSet):
                 organization=membership.organization
             )
         except Enrollment.DoesNotExist:
-            raise ValidationError(
+            raise NotFound(
                 "You are not enrolled in this course"
             )
 

@@ -103,7 +103,10 @@ class Membership(TimeStampModel):
             return True
 
         if self.is_student:
-            return course.is_published and course.is_active
+            return (
+                course.is_active and
+                course.status == course.Status.PUBLISHED
+            )
 
         return False
 
@@ -126,7 +129,7 @@ class Membership(TimeStampModel):
         Others cannot edit
         """
 
-        if course.organization_id != self.organization_id:
+        if self.organization_id != course.organization_id  :
             return False
 
         if self.is_owner:
@@ -252,7 +255,15 @@ class Membership(TimeStampModel):
 
         return False
 
-    def can_cancel_enrollment(self, course):
+    def can_give_feedback(self, course):
+        if self.is_student:
+            if course.organization_id != self.organization_id:
+                return False
+            return self.is_enrolled_in(course)
+
+        return False
+
+    def can_cancel_enrollment(self, course=None):
         return self.is_student
 
     def can_view_course_feedbacks(self, course):
@@ -261,7 +272,7 @@ class Membership(TimeStampModel):
     def can_view_enrollment_status(self, course):
         return self.can_view_course(course)
 
-    def can_view_my_enrollments(self):
+    def can_view_my_enrollments(self, obj=None):
         return self.is_student
 
     def __str__(self):

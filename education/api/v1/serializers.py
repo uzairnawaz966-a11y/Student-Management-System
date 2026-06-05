@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from education.services.feedback_service import FeedbackService
+from rest_framework.exceptions import NotFound
 from django.db import IntegrityError
 from education.models import (
     Course,
@@ -227,10 +228,12 @@ class EnrollmentCreateSerializer(serializers.Serializer):
         try:
             course = Course.objects.get(
                 id=course_pk,
-                organization=membership.organization
+                organization=membership.organization,
+                is_active=True,
+                status=Course.Status.PUBLISHED
             )
         except Course.DoesNotExist:
-            raise serializers.ValidationError("Course not found")
+            raise NotFound("Course not found")
 
         enrollment, created = Enrollment.objects.get_or_create(
             student=membership,
@@ -292,8 +295,13 @@ class FeedbackCreateSerializer(serializers.ModelSerializer):
         membership = request.membership
         course = self.context["course"]
 
-        if not membership.is_enrolled_in(course):
-            raise serializers.ValidationError("You can only give feedback to those courses in which you are enrolled")
+        if Feedback.objects.filter(course=course, student=membership).exists():
+            raise serializers.ValidationError(
+                "You have already submitted feedback for this course"
+            )
+
+        if not membership.can_give_feedback(course):
+            raise PermissionDenied("You cannot give feedback")
 
         attrs["course_id"] = course.id
 
