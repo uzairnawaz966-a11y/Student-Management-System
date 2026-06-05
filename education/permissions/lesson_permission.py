@@ -8,6 +8,8 @@ class LessonPermission(BasePermission):
         "update": "can_edit_lesson",
         "partial_update": "can_edit_lesson",
         "destroy": "can_delete_lesson",
+        "complete_lesson": "can_complete_lesson",
+        "publish": "can_publish_lesson",
     }
 
     def has_permission(self, request, view):
@@ -19,7 +21,7 @@ class LessonPermission(BasePermission):
         method_name = self.OBJECT_ACTION_MAP.get(view.action)
 
         if not method_name:
-            return True
+            return False
 
         checker = getattr(membership, method_name, None)
 
