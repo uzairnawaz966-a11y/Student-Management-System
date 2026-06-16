@@ -1,6 +1,6 @@
 # from rest_framework.test import APITestCase
 # from django.urls import reverse
-from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework_simplejwt.tokens import RefreshToken
 # from education.models import Course, Lesson, Enrollment, CourseType, Feedback
 # from organization.models import Organization, Membership
 # from django.contrib.auth import get_user_model
@@ -8,13 +8,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 # User = get_user_model()
 
 
-def get_token(user, membership):
-    refresh = RefreshToken.for_user(user)
+# def get_token(user, membership):
+#     refresh = RefreshToken.for_user(user)
 
-    refresh["organization_id"] = membership.organization.id
-    refresh["role"] = membership.role
+#     refresh["organization_id"] = membership.organization.id
+#     refresh["role"] = membership.role
 
-    return str(refresh.access_token)
+#     return str(refresh.access_token)
 
 
 # class CourseViewSetTests(APITestCase):

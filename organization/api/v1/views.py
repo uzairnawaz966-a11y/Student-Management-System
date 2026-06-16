@@ -22,6 +22,7 @@ from organization.api.v1.serializers import (
 
 
 class OrganizationCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = OrganizationCreateSerializer(data=request.data)
@@ -149,7 +150,7 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
 
 
 class RetrieveInviteLinkAPIView(APIView):
-    def get(self, token):
+    def get(self, request, token):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
@@ -181,6 +182,7 @@ class RegisterFromInviteAPIView(APIView):
         data["organization_id"] = invite_link.organization_id
         data["role"] = invite_link.role
 
-        response = AuthService.create_account(data)
+        service = AuthService()
+        response = service.create_account(data)
 
         return Response(response, status=status.HTTP_201_CREATED)
