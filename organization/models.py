@@ -216,7 +216,20 @@ class Membership(TimeStampModel):
             course.is_active and
             course.status == course.Status.PUBLISHED
         )
+    
+    def can_complete_lesson(self, lesson):
+        if not self.is_student:
+            return False
+    
+        course = lesson.course
 
+        if course.organization_id != self.organization_id:
+            return False
+
+        return self.can_enroll_in(course)
+
+    def can_publish_lesson(self, lesson):
+        return self.can_edit_lesson(lesson)
 
     def can_view_enrollments_for(self, course):
         """
