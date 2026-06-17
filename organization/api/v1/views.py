@@ -38,13 +38,14 @@ class OrganizationCreateAPIView(APIView):
                 "message": "Organization created successfully",
                 "organization": {
                     "id": organization.id,
-                    "owner": organization.owner,
+                    "owner": organization.owner.id,
                     "name": organization.name
                 },
                 "membership": {
                     "role": membership.role
                 }
-            }
+            },
+            status=status.HTTP_201_CREATED
         )
 
 
