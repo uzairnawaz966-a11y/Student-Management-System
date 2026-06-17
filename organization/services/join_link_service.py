@@ -8,39 +8,25 @@ class OrganizationJoinLinkService:
 
     @staticmethod
     def create_join_link(membership, role, max_users=None):
-
         link = OrganizationJoinLink.objects.create(
             organization=membership.organization,
             created_by=membership,
             role=role,
             max_users=max_users,
-            is_valid=True
         )
 
-        organization_join_url = f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"
-
-        return organization_join_url
-
-
-class OrganizationJoinLinkService:
+        return f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"
 
     @staticmethod
     def disable_link(invite_link, membership):
-
-        if not membership.is_owner or not membership.is_admin:
+        if not (membership.is_owner or membership.is_admin):
             raise PermissionDenied("Not allowed to disable this link")
 
         invite_link.status = OrganizationJoinLink.Status.DISABLED
         invite_link.is_expired = True
         invite_link.expired_at = timezone.now()
 
-        invite_link.save(
-            update_fields=[
-                "status",
-                "is_expired",
-                "expired_at"
-            ]
-        )
+        invite_link.save(update_fields=["status", "is_expired", "expired_at"])
 
         return invite_link
 

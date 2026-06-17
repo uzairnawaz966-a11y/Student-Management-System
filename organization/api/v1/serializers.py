@@ -23,8 +23,6 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        request = self.context.get("request")
-        membership = request.membership
         role = attrs.get("role")
         allowed_roles = [
             Membership.Role.ADMIN,
@@ -32,9 +30,11 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
             Membership.Role.STUDENT
         ]
 
-        if membership.is_admin:
-            if role not in allowed_roles:
-                raise serializers.ValidationError("Not allowed to create link for this role")
+        if role == Membership.Role.OWNER:
+            raise serializers.ValidationError("Cannot create invite link for OWNER role")
+
+        if role not in allowed_roles:
+            raise serializers.ValidationError("Invalid role for join link")
 
         return attrs
 
