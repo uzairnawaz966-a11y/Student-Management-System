@@ -1,7 +1,6 @@
 from rest_framework.test import APITestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-
 from organization.models import Organization, Membership, OrganizationJoinLink
 from user_auth.models import AccountActivationToken
 
@@ -49,7 +48,7 @@ class RegisterFromInviteAPIViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 201)
 
-        user = User.objects.get(username="Hamza")
+        user = User.objects.get(username="hamza")
         self.assertEqual(user.email, "hamza@test.com")
 
         membership = Membership.objects.get(user=user)
@@ -100,7 +99,7 @@ class RegisterFromInviteAPIViewTests(APITestCase):
             "first_name": "Hamza",
             "last_name": "Khan",
             "username": "hamza",
-            "email": "hamza@test.com",
+            "email": "aslam@test.com",
             "password": "testuset@123",
             "password_confirmation": "testuset@123"
         }
@@ -111,9 +110,9 @@ class RegisterFromInviteAPIViewTests(APITestCase):
 
     def test_register_from_invite_fails_when_username_already_exists(self):
         User.objects.create_user(
-            username="johndoe",
-            email="existing@test.com",
-            password="testpass123",
+            username="hamza",
+            email="hamzakhan@test.com",
+            password="testuser@123",
             first_name="Hamid",
             last_name="Nadeem"
         )
