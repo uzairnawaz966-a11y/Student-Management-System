@@ -50,6 +50,9 @@ class AuthService:
             is_active=True
         ).first()
 
+        if not membership:
+            return {"message": "Invalid organization"}, 400
+
         refresh = RefreshToken.for_user(user)
 
         refresh["organization_id"] = membership.organization_id
