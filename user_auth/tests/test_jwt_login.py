@@ -127,7 +127,7 @@ class JWTLoginTests(APITestCase):
 
         token = AccessToken(access_token)
 
-        self.assertEqual(token["organization_id"], 1)
+        self.assertEqual(token["organization_id"], self.organization.id)
         self.assertEqual(token["role"], "admin")
 
     def test_login_respects_correct_membership(self):

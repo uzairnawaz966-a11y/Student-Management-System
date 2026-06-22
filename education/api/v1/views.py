@@ -275,7 +275,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+class LessonViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
     permission_classes = [IsAuthenticated, LessonPermission]
 
     def get_serializer_class(self):
@@ -339,7 +339,6 @@ class LessonViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.Des
             },
             status=status.HTTP_200_OK
         )
-
 
 
 

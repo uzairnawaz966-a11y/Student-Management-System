@@ -7,12 +7,13 @@ from django.conf import settings
 class OrganizationJoinLinkService:
 
     @staticmethod
-    def create_join_link(membership, role, max_users=None):
+    def create_join_link(membership, role, allowed_emails, max_users=None):
         link = OrganizationJoinLink.objects.create(
             organization=membership.organization,
             created_by=membership,
             role=role,
             max_users=max_users,
+            allowed_emails=allowed_emails
         )
 
         return f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"

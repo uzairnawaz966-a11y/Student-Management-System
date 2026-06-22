@@ -19,36 +19,36 @@ class ChangePasswordTests(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
-    # def test_change_password_success(self):
-    #     payload = {
-    #         "password": "oldpass123",
-    #         "new_password": "newpass123"
-    #     }
+    def test_change_password_success(self):
+        payload = {
+            "password": "oldpass123",
+            "new_password": "newpass123"
+        }
     
-    #     response = self.client.post(self.url, payload)
+        response = self.client.post(self.url, payload)
 
-    #     self.assertEqual(response.status_code, 200)
-    #     self.user.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
 
-    #     self.assertTrue(self.user.check_password, "newpass123")
+        self.assertTrue(self.user.check_password, "newpass123")
     
-    # def test_change_password_missing_old_password(self):
-    #     payload = {
-    #         "new_password": "newpass123"
-    #     }
+    def test_change_password_missing_old_password(self):
+        payload = {
+            "new_password": "newpass123"
+        }
 
-    #     response = self.client.post(self.url, payload)
+        response = self.client.post(self.url, payload)
 
-    #     self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
-    # def test_change_password_missing_new_password(self):
-    #     payload = {
-    #         "password": "oldpass123"
-    #     }
+    def test_change_password_missing_new_password(self):
+        payload = {
+            "password": "oldpass123"
+        }
 
-    #     response = self.client.post(self.url, payload)
+        response = self.client.post(self.url, payload)
 
-    #     self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     def test_change_password_missing_both_passwords(self):
         response = self.client.post(self.url, {})

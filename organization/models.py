@@ -304,6 +304,7 @@ class OrganizationJoinLink(TimeStampModel):
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE)
     max_users = models.PositiveIntegerField(null=True, blank=True)
+    allowed_emails = models.JSONField(default=list, blank=True)
     used_count = models.PositiveIntegerField(default=0)
     is_expired = models.BooleanField(default=False)
     expired_at = models.DateTimeField(null=True, blank=True)
