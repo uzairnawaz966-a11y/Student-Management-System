@@ -94,3 +94,6 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
         data["access"] = str(access)
         
         return data
+
+class CheckEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()

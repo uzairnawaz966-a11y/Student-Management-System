@@ -2,10 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
-from user_auth.api.v1.serializers import JWTLoginSerializer, RegisterSerializer, CustomTokenRefreshSerializer
+from user_auth.api.v1.serializers import JWTLoginSerializer, RegisterSerializer, CustomTokenRefreshSerializer, CheckEmailSerializer
 from user_auth.services.auth_service import AuthService
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenRefreshView
+from organization.models import Membership
 
 
 class RegisterUser(APIView):
@@ -78,3 +79,41 @@ class ChangePassword(APIView):
 
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
+
+
+class CheckEmailAPIView(APIView):
+    """
+    Accepts an email address and returns all organizations linked with that email through memberships
+    """
+    def post(self, request):
+        serializer = CheckEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        memberships = Membership.objects.filter(user__email=email).select_related("organization")
+
+        organizations = [
+            {
+                "id": membership.organization.id,
+                "name": membership.organization.name,
+                "role": membership.role
+            }
+            for membership in memberships
+        ]
+
+        if bool(organizations):
+            return Response(
+                {
+                    "organization_exists": bool(organizations),
+                    "Joined organizations": organizations
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {
+                    "organization_exists": False,
+                    "Joined organizations": []
+            },
+            status=status.HTTP_200_OK
+        )

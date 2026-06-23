@@ -75,6 +75,7 @@ class JoinLinkDetailSerializer(serializers.ModelSerializer):
 
 
 class JoinLinkValidationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
     def validate(self, attrs):
         invite_link = self.context.get("invite_link")
@@ -82,8 +83,20 @@ class JoinLinkValidationSerializer(serializers.Serializer):
         if not invite_link.is_valid:
             raise serializers.ValidationError("Link disabled")
 
-        if invite_link.used_count >= invite_link.max_users:
+        if (
+            invite_link.max_users is not None
+            and invite_link.used_count >= invite_link.max_users
+        ):
             raise serializers.ValidationError("Join link usage limit exceeded")
+    
+        email = attrs.get("email")
+
+        allowed_emails = invite_link.allowed_emails
+
+        if email not in allowed_emails:
+            raise serializers.ValidationError(
+                "Email is not authorized for this invite link"
+            )
 
         return attrs
 

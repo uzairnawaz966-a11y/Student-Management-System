@@ -6,6 +6,7 @@ from organization.api.v1.views import (
     OrganizationJoinLinkViewset,
     RetrieveInviteLinkAPIView,
     RegisterFromInviteAPIView,
+    # AcceptInviteAPIView
 )
 
 
@@ -19,5 +20,6 @@ urlpatterns = [
     path("switch/", SwitchOrganizationAPIView.as_view(), name="switch-organization"),
     path("create/", OrganizationCreateAPIView.as_view(), name="organization-create"),
     path("invite/<uuid:token>/validate/", RetrieveInviteLinkAPIView.as_view(), name="validate-invite"),
-    path("student-management-system/join/<uuid:token>/", RegisterFromInviteAPIView.as_view(), name="register-invite")
+    path("student-management-system/join/<uuid:token>/", RegisterFromInviteAPIView.as_view(), name="register-invite"),
+    # path("invite/<uuid:token>/accept/", AcceptInviteAPIView.as_view(), name="accept-invite")
 ]
