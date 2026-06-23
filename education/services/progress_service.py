@@ -1,5 +1,7 @@
 from education.models import LessonProgress, Progress
 from django.utils import timezone
+from rest_framework.exceptions import PermissionDenied
+from education.models import Lesson
 from organization.models import OrganizationJoinLink, Membership
 
 class ProgressService:
@@ -44,6 +46,11 @@ class ProgressService:
         Returns updated Progress object
         """
 
+        if lesson.status == Lesson.Status.DRAFT:
+            raise PermissionDenied(
+                "Draft lessons cannot be completed"
+            )
+
         lesson_progress, created = LessonProgress.objects.update_or_create(
             enrollment=enrollment,
             lesson=lesson
@@ -52,8 +59,9 @@ class ProgressService:
         if not lesson_progress.is_completed:
             lesson_progress.is_completed = True
             lesson_progress.completed_at = timezone.now()
-            lesson_progress.save(update_fields=["is_completed", "completed_at"])
-
+            lesson_progress.save(
+                update_fields=["is_completed", "completed_at"]
+            )
 
         return ProgressService.recalculate_progress(enrollment)
 

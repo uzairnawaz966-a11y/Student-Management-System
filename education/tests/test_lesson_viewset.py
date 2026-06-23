@@ -209,6 +209,7 @@ class LessonUpdateViewSetTests(APITestCase):
             order=1,
             status=Lesson.Status.PUBLISHED
         )
+        
 
         self.draft_course_lesson = Lesson.objects.create(
             title="Draft course lesson 1",
@@ -277,491 +278,491 @@ class LessonUpdateViewSetTests(APITestCase):
         )
 
 
-    # def test_update_lesson_success(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_update_lesson_success(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Updated Title",
-    #         "content": "Updated Content",
-    #         "video_link": "https://example.com/new"
-    #     }
+        payload = {
+            "title": "Updated Title",
+            "content": "Updated Content",
+            "video_link": "https://example.com/new"
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    #     self.lesson.refresh_from_db()
-    #     self.assertEqual(self.lesson.title, "Updated Title")
+        self.lesson.refresh_from_db()
+        self.assertEqual(self.lesson.title, "Updated Title")
 
-    # def test_partial_update_success(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_partial_update_success(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Partially Updated"
-    #     }
+        payload = {
+            "title": "Partially Updated"
+        }
 
-    #     response = self.client.patch(url, payload)
+        response = self.client.patch(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    #     self.lesson.refresh_from_db()
-    #     self.assertEqual(self.lesson.title, "Partially Updated")
+        self.lesson.refresh_from_db()
+        self.assertEqual(self.lesson.title, "Partially Updated")
 
-    # def test_update_denied_for_student(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_update_denied_for_student(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Hack Attempt"
-    #     }
+        payload = {
+            "title": "Hack Attempt"
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # def test_partial_update_denied_for_student(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_partial_update_denied_for_student(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Hack Attempt"
-    #     }
+        payload = {
+            "title": "Hack Attempt"
+        }
 
-    #     response = self.client.patch(url, payload)
+        response = self.client.patch(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # def test_update_validation_fails_empty_content_and_video(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_update_validation_fails_empty_content_and_video(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "content": "",
-    #         "video_link": ""
-    #     }
+        payload = {
+            "content": "",
+            "video_link": ""
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_update_invalid_video_url(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_update_invalid_video_url(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "video_link": "invalid-url"
-    #     }
+        payload = {
+            "video_link": "invalid-url"
+        }
 
-    #     response = self.client.patch(url, payload)
+        response = self.client.patch(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_update_lesson_other_org_not_accessible(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_update_lesson_other_org_not_accessible(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson_other_org.id])
+        url = reverse("lesson-detail", args=[self.lesson_other_org.id])
 
-    #     payload = {
-    #         "title": "Should Not Work"
-    #     }
+        payload = {
+            "title": "Should Not Work"
+        }
 
-    #     response = self.client.patch(url, payload)
+        response = self.client.patch(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
     
-    # def test_update_lesson_unauthenticated_user(self):
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+    def test_update_lesson_unauthenticated_user(self):
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Unauthorized Update Attempt"
-    #     }
+        payload = {
+            "title": "Unauthorized Update Attempt"
+        }
 
-    #     response = self.client.patch(url, payload)
+        response = self.client.patch(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    # def test_delete_lesson_success_by_instructor(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_delete_lesson_success_by_instructor(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     response = self.client.delete(url)
+        response = self.client.delete(url)
 
-    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    #     self.assertFalse(Lesson.objects.filter(id=self.lesson.id).exists())
+        self.assertFalse(Lesson.objects.filter(id=self.lesson.id).exists())
 
-    # def test_delete_lesson_forbidden_for_student(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_delete_lesson_forbidden_for_student(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     response = self.client.delete(url)
+        response = self.client.delete(url)
 
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # def test_delete_lesson_unauthenticated(self):
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+    def test_delete_lesson_unauthenticated(self):
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     response = self.client.delete(url)
+        response = self.client.delete(url)
 
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
     
-    # def test_delete_non_existent_lesson_returns_404(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_delete_non_existent_lesson_returns_404(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[99999])
+        url = reverse("lesson-detail", args=[99999])
 
-    #     response = self.client.delete(url)
+        response = self.client.delete(url)
 
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    # def test_put_lesson_other_org_forbidden(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_put_lesson_other_org_forbidden(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson_other_org.id])
+        url = reverse("lesson-detail", args=[self.lesson_other_org.id])
 
-    #     payload = {
-    #         "title": "Hacked Update"
-    #     }
+        payload = {
+            "title": "Hacked Update"
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    # def test_delete_lesson_other_org_forbidden(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_delete_lesson_other_org_forbidden(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson_other_org.id])
+        url = reverse("lesson-detail", args=[self.lesson_other_org.id])
 
-    #     response = self.client.delete(url)
+        response = self.client.delete(url)
 
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    # def test_put_invalid_video_url_rejected(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_put_invalid_video_url_rejected(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Test",
-    #         "content": "Test content",
-    #         "video_link": "not-a-valid-url"
-    #     }
+        payload = {
+            "title": "Test",
+            "content": "Test content",
+            "video_link": "not-a-valid-url"
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_update_empty_title_fails(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_update_empty_title_fails(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "",
-    #         "content": "Valid content",
-    #         "video_link": "https://example.com/video"
-    #     }
+        payload = {
+            "title": "",
+            "content": "Valid content",
+            "video_link": "https://example.com/video"
+        }
 
-    #     response = self.client.put(url, payload)
+        response = self.client.put(url, payload)
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # def test_put_overwrites_all_fields(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_put_overwrites_all_fields(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Fully Updated Title",
-    #         "content": "Fully Updated Content",
-    #         "video_link": "https://example.com/full-update"
-    #     }
+        payload = {
+            "title": "Fully Updated Title",
+            "content": "Fully Updated Content",
+            "video_link": "https://example.com/full-update"
+        }
 
-    #     self.client.put(url, payload)
+        self.client.put(url, payload)
 
-    #     self.lesson.refresh_from_db()
+        self.lesson.refresh_from_db()
 
-    #     self.assertEqual(self.lesson.title, "Fully Updated Title")
-    #     self.assertEqual(self.lesson.content, "Fully Updated Content")
-    #     self.assertEqual(self.lesson.video_link, "https://example.com/full-update")
+        self.assertEqual(self.lesson.title, "Fully Updated Title")
+        self.assertEqual(self.lesson.content, "Fully Updated Content")
+        self.assertEqual(self.lesson.video_link, "https://example.com/full-update")
 
-    # def test_patch_does_not_overwrite_other_fields(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_patch_does_not_overwrite_other_fields(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     original_content = self.lesson.content
-    #     original_video = self.lesson.video_link
+        original_content = self.lesson.content
+        original_video = self.lesson.video_link
 
-    #     url = reverse("lesson-detail", args=[self.lesson.id])
+        url = reverse("lesson-detail", args=[self.lesson.id])
 
-    #     payload = {
-    #         "title": "Only Title Changed"
-    #     }
+        payload = {
+            "title": "Only Title Changed"
+        }
 
-    #     self.client.patch(url, payload)
+        self.client.patch(url, payload)
 
-    #     self.lesson.refresh_from_db()
+        self.lesson.refresh_from_db()
 
-    #     self.assertEqual(self.lesson.title, "Only Title Changed")
-    #     self.assertEqual(self.lesson.content, original_content)
-    #     self.assertEqual(self.lesson.video_link, original_video)
+        self.assertEqual(self.lesson.title, "Only Title Changed")
+        self.assertEqual(self.lesson.content, original_content)
+        self.assertEqual(self.lesson.video_link, original_video)
 
-    # def test_student_can_complete_lesson(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_student_can_complete_lesson(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertEqual(response.data["message"], "Lesson completed")
-    #     self.assertIn("progress", response.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], "Lesson completed")
+        self.assertIn("progress", response.data)
 
-    # def test_instructor_cannot_complete_lesson(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_instructor_cannot_complete_lesson(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
-    # def test_admin_cannot_complete_lesson(self):
-    #     self.authenticate(
-    #         self.admin_user,
-    #         self.admin_membership
-    #     )
+    def test_admin_cannot_complete_lesson(self):
+        self.authenticate(
+            self.admin_user,
+            self.admin_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
-    # def test_owner_cannot_complete_lesson(self):
-    #     self.authenticate(
-    #         self.owner_user,
-    #         self.owner_membership
-    #     )
+    def test_owner_cannot_complete_lesson(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
     
-    # def test_unauthorized_user_cannot_complete_lesson(self):
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+    def test_unauthorized_user_cannot_complete_lesson(self):
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 401)
     
-    # def test_non_enrolled_student_cannot_complete_lesson(self):
-    #     self.authenticate(
-    #         self.non_enrolled_student_user,
-    #         self.non_enrolled_student_membership
-    #     )
+    def test_non_enrolled_student_cannot_complete_lesson(self):
+        self.authenticate(
+            self.non_enrolled_student_user,
+            self.non_enrolled_student_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
     
-    # def test_invalid_lesson_returns_404(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_invalid_lesson_returns_404(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[99999])
+        url = reverse("lesson-complete-lesson", args=[99999])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
     
-    # def test_instructor_can_publish_lesson(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_instructor_can_publish_lesson(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
     
-    # def test_owner_can_publish_lesson(self):
-    #     self.authenticate(
-    #         self.owner_user,
-    #         self.owner_membership
-    #     )
+    def test_owner_can_publish_lesson(self):
+        self.authenticate(
+            self.owner_user,
+            self.owner_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
     
-    # def test_student_cannot_publish_lesson(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_student_cannot_publish_lesson(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
     
-    # def test_student_cannot_publish_lesson(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_student_cannot_publish_lesson(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 403)
     
-    # def test_unauthenticated_user_cannot_publish_lesson(self):
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+    def test_unauthenticated_user_cannot_publish_lesson(self):
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 401)
     
-    # def test_other_org_user_cannot_publish_lesson(self):
-    #     self.authenticate(
-    #         self.second_instructor_user,
-    #         self.second_instructor_membership
-    #     )
+    def test_other_org_user_cannot_publish_lesson(self):
+        self.authenticate(
+            self.second_instructor_user,
+            self.second_instructor_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
     
-    # def test_other_org_user_cannot_publish_lesson(self):
-    #     self.authenticate(
-    #         self.second_instructor_user,
-    #         self.second_instructor_membership
-    #     )
+    def test_other_org_user_cannot_publish_lesson(self):
+        self.authenticate(
+            self.second_instructor_user,
+            self.second_instructor_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
     
-    # def test_unpublished_course_lesson_returns_400(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_unpublished_course_lesson_returns_400(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[self.draft_course_lesson.id])
+        url = reverse("lesson-publish", args=[self.draft_course_lesson.id])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
     
-    # def test_invalid_lesson_publish_returns_404(self):
-    #     self.authenticate(
-    #         self.instructor_user,
-    #         self.instructor_membership
-    #     )
+    def test_invalid_lesson_publish_returns_404(self):
+        self.authenticate(
+            self.instructor_user,
+            self.instructor_membership
+        )
 
-    #     url = reverse("lesson-publish", args=[99999])
+        url = reverse("lesson-publish", args=[99999])
 
-    #     response = self.client.post(url)
+        response = self.client.post(url)
 
-    #     self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
-    # def test_student_cannot_duplicate_complete_lesson(self):
-    #     self.authenticate(
-    #         self.student_user,
-    #         self.student_membership
-    #     )
+    def test_student_cannot_duplicate_complete_lesson(self):
+        self.authenticate(
+            self.student_user,
+            self.student_membership
+        )
 
-    #     url = reverse("lesson-complete-lesson", args=[self.lesson.id])
+        url = reverse("lesson-complete-lesson", args=[self.lesson.id])
 
-    #     first_response = self.client.post(url)
-    #     second_response = self.client.post(url)
+        first_response = self.client.post(url)
+        second_response = self.client.post(url)
 
-    #     self.assertEqual(first_response.status_code, 200)
-    #     self.assertEqual(second_response.status_code, 200)
-    #     self.assertIn(first_response.data["message"], "Lesson completed")
-    #     self.assertEqual(second_response.data["message"], "Lesson completed")
+        self.assertEqual(first_response.status_code, 200)
+        self.assertEqual(second_response.status_code, 200)
+        self.assertIn(first_response.data["message"], "Lesson completed")
+        self.assertEqual(second_response.data["message"], "Lesson completed")
 
     def test_user_cannot_complete_draft_lesson(self):
         self.authenticate(
@@ -813,7 +814,7 @@ class LessonUpdateViewSetTests(APITestCase):
     def test_cannot_republish_published_lesson(self):
         self.authenticate(self.instructor_user, self.instructor_membership)
 
-        url = reverse("lesson-publish", args=[self.lesson.id])
+        url = reverse("lesson-publish", args=[self.unpublished_lesson.id])
 
         first = self.client.post(url)
         second = self.client.post(url)

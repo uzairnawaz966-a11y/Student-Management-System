@@ -44,7 +44,7 @@ class JWTLoginEdgeCaseV2Tests(APITestCase):
         )
 
         self.payload = {
-            "username": "uzair",
+            "username": "Uzair",
             "password": "test123",
             "organization_id": self.org1.id
         }

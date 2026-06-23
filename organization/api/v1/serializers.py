@@ -1,5 +1,7 @@
 from rest_framework import serializers
+from django.core.validators import validate_email
 from organization.models import Organization, OrganizationJoinLink, Membership
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 
 class OrganizationCreateSerializer(serializers.ModelSerializer):
@@ -16,7 +18,8 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
         model = OrganizationJoinLink
         fields = [
             "role",
-            "max_users"
+            "max_users",
+            "allowed_emails"
         ]
         extra_kwargs = {
             "max_users": {"required": True}
@@ -38,6 +41,28 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def validate_allowed_emails(self, value):
+        request = self.context["request"]
+        organization = request.membership.organization
+
+        if not value:
+            raise serializers.ValidationError("No emails provided")
+
+        normalized = []
+
+        for email in value:
+
+            if Membership.objects.filter(organization=organization, user__email=email).exists():
+                raise serializers.ValidationError(f"{email} already registered for this organization")
+
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                raise serializers.ValidationError(f"{email} is not a valid email address")
+
+            normalized.append(email)
+
+        return normalized
 
 class JoinLinkDetailSerializer(serializers.ModelSerializer):
     class Meta:

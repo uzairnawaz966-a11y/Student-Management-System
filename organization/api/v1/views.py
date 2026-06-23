@@ -20,6 +20,11 @@ from organization.api.v1.serializers import (
     JoinLinkDetailSerializer
 )
 
+"""
+[email] [hit enter] -> (check email linked with any org or not) -> If linked -> show linked organization
+                                                                -> if not linked -> 1) ask user input for new organization name  -> call org create api if created -> then ask for user metadata (password, name etc)
+"""
+
 
 class OrganizationCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -174,7 +179,7 @@ class RegisterFromInviteAPIView(APIView):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
-        )
+        ) # check expiry  /  
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
