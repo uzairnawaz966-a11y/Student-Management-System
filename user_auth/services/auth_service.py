@@ -92,8 +92,7 @@ class AuthService:
         membership = Membership.objects.create(
             user=user,
             organization_id=organization_id,
-            role=role,
-            is_active=False
+            role=role
         )
 
         self.create_profile(membership)

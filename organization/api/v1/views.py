@@ -5,6 +5,7 @@ from organization.models import OrganizationJoinLink
 from organization.services.join_link_service import OrganizationJoinLinkService
 from organization.services.organization_service import OrganizationService
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
 from organization.permissions import JoinLinkViewSetPermission
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
@@ -19,6 +20,8 @@ from organization.api.v1.serializers import (
     JoinLinkValidationSerializer,
     JoinLinkDetailSerializer
 )
+
+User = get_user_model()
 
 """
 [email] [hit enter] -> (check email linked with any org or not) -> If linked -> show linked organization
@@ -156,34 +159,65 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
 
 
 class RetrieveInviteLinkAPIView(APIView):
-    def get(self, request, token):
+    def post(self, request, token):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
         )
 
         validation_serializer = JoinLinkValidationSerializer(
-            data={},
+            data=request.data,
             context={
                 "invite_link": invite_link
             }
         )
         validation_serializer.is_valid(raise_exception=True)
 
+        email = validation_serializer.validated_data["email"]
+
+        email_exists = User.objects.filter(email=email).exists()
+
         detail_serializer = JoinLinkDetailSerializer(invite_link)
-        return Response(detail_serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "valid": True,
+                "email": email,
+                "email_exists": email_exists,
+                "next_step": "login" if email_exists else "signup",
+                "invite": detail_serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class RegisterFromInviteAPIView(APIView):
+    """
+    Fetches Invite link
+    Validate user input credentials
+    Checks email exists in allowed_emails
+    Adds organization_id and role in the request data
+    Calls create_account method which will creates inactive user and membership and sends activation link on the user's email
+    """
+
     def post(self, request, token):
         invite_link = get_object_or_404(
             OrganizationJoinLink,
             token=token
-        ) # check expiry  /  
+        )
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
+
+        email = data["email"]
+
+        if email not in invite_link.allowed_emails:
+            return Response(
+                {
+                    "message": "Email is not authorized for this invite link"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         data["organization_id"] = invite_link.organization_id
         data["role"] = invite_link.role
@@ -192,3 +226,46 @@ class RegisterFromInviteAPIView(APIView):
         response = service.create_account(data)
 
         return Response(response, status=status.HTTP_201_CREATED)
+
+
+# class AcceptInviteAPIView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, token):
+#         invite_link = get_object_or_404(
+#             OrganizationJoinLink,
+#             token=token
+#         )
+
+#         user_email = request.user.email
+
+#         if user_email not in invite_link.allowed_emails:
+#             return Response(
+#                 {"detail": "Not allowed for this invite"},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
+
+#         membership_exists = Membership.objects.filter(
+#             user=request.user,
+#             organization=invite_link.organization
+#         ).exists()
+
+#         if membership_exists:
+#             return Response(
+#                 {"detail": "Already a member"},
+#                 status=status.HTTP_200_OK
+#             )
+
+#         Membership.objects.create(
+#             user=request.user,
+#             organization=invite_link.organization,
+#             role=invite_link.role,
+#             is_active=True
+#         )
+
+#         invite_link.used_count += 1
+#         invite_link.save(update_fields=["used_count"])
+
+#         return Response({
+#             "message": "Joined organization successfully"
+#         })

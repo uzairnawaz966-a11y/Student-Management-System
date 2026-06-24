@@ -5,6 +5,7 @@ from user_auth.api.v1.views import (
     JWTLoginAPIView,
     ResendActivationLink,
     ChangePassword,
+    CheckEmailAPIView,
 )
 
 
@@ -13,5 +14,6 @@ urlpatterns = [
     path("activate-user/<uuid:token>/", activate_account, name="activate_account"),
     path('login/', JWTLoginAPIView.as_view(), name="jwt_login"),
     path('resend-link/', ResendActivationLink.as_view(), name="resend_activation_link"),
-    path('change-password/', ChangePassword.as_view(), name="change_password")
+    path('change-password/', ChangePassword.as_view(), name="change_password"),
+    path('check-email/', CheckEmailAPIView.as_view(), name="check-email")
 ]
