@@ -51,7 +51,7 @@ class AuthService:
         ).first()
 
         if not membership:
-            return {"message": "Invalid organization"}, 400
+            return {"message": "Not a member"}, 400
 
         refresh = RefreshToken.for_user(user)
 
@@ -111,6 +111,10 @@ class AuthService:
         organization_id = validated_data.pop("organization_id", None)
         role = validated_data.pop("role", None)
 
+        print(f"Validated_data: {validated_data}")
+        print(f"Organization id: {organization_id}")
+        print(f"Role: {role}")
+
         with transaction.atomic():
 
             user = User.objects.create_user(
@@ -131,7 +135,7 @@ class AuthService:
                 expiration_date=expiry_date,
             )
 
-        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/activate-user/{activation_token.token}/"
+        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/v1/activate-user/{activation_token.token}/"
 
         email_client = EmailClient()
         try:
@@ -139,7 +143,10 @@ class AuthService:
             email_client.send_verification_email(email, activation_link)
         except Exception as e:
             logging.error(f"Account created but Failed to send activation link to {email}, Exception cause: {str(e)}")
-            return {"message": "Account created but Failed to send activation link"}, 201
+            return {
+                "message": "Account created but Failed to send activation link",
+                "error": str(e)
+            }, 201
 
         return {
                 "message": "User Registered Successfully, Check your Gmail for Account Activation link",
@@ -178,7 +185,7 @@ class AuthService:
             expiration_date=expiry_date
         )
 
-        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/activate-user/{token_object.token}"
+        activation_link = f"{settings.ORGANIZATION_BASE_URL}api/v1/activate-user/{token_object.token}"
 
         email_client = EmailClient()
 
@@ -199,3 +206,19 @@ class AuthService:
         user.save()
 
         return {"message": "Password Changed successfully"}, 200
+
+    def accept_invite(self, join_link, user):
+        membership, created = Membership.objects.get_or_create(
+            user=user,
+            organization=join_link.organization,
+            defaults={
+                "role": join_link.role,
+                "is_active": True
+            }
+        )
+        if created:
+            join_link.used_count += 1
+            join_link.save(update_fields=["used_count"])
+            self.create_profile(membership)
+
+        return membership

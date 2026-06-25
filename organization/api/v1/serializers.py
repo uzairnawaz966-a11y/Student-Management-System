@@ -22,7 +22,8 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
             "allowed_emails"
         ]
         extra_kwargs = {
-            "max_users": {"required": True}
+            "max_users": {"required": True},
+            "allowed_emails": {"required": True}
         }
 
     def validate(self, attrs):
@@ -65,11 +66,15 @@ class OrganizationJoinLinkSerializer(serializers.ModelSerializer):
         return normalized
 
 class JoinLinkDetailSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source="organization.name", read_only=True)
+    creator = serializers.CharField(source="created_by.user", read_only=True)
+    
     class Meta:
         model = OrganizationJoinLink
         fields = [
-            "organization",
-            "created_by",
+            "organization_id",
+            "organization_name",
+            "creator",
             "status"
         ]
 

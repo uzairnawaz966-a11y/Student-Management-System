@@ -16,7 +16,7 @@ class OrganizationJoinLinkService:
             allowed_emails=allowed_emails
         )
 
-        return f"{settings.ORGANIZATION_BASE_URL}/student-management-system/join/{link.token}/"
+        return f"{settings.ORGANIZATION_BASE_URL}api/v1/student-management-system/join/{link.token}/"
 
     @staticmethod
     def disable_link(invite_link, membership):

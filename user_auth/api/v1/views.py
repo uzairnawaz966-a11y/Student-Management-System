@@ -84,6 +84,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 class CheckEmailAPIView(APIView):
     """
     Accepts an email address and returns all organizations linked with that email through memberships
+    This api is specific for only brand-new users who aren't invited from any organization
     """
     def post(self, request):
         serializer = CheckEmailSerializer(data=request.data)
