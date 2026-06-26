@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from organization.permissions import JoinLinkViewSetPermission
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from user_auth.api.v1.serializers import RegisterSerializer
 from user_auth.services.auth_service import AuthService
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -30,7 +31,6 @@ User = get_user_model()
 
 
 class OrganizationCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = OrganizationCreateSerializer(data=request.data)
@@ -121,6 +121,7 @@ class OrganizationJoinLinkViewset(viewsets.ModelViewSet):
         link = OrganizationJoinLinkService.create_join_link(
             membership=membership,
             role=serializer.validated_data.get("role"),
+            allowed_emails=serializer.validated_data.get("allowed_emails"),
             max_users=serializer.validated_data.get("max_users")
         )
 
@@ -175,15 +176,23 @@ class RetrieveInviteLinkAPIView(APIView):
 
         email = validation_serializer.validated_data["email"]
 
-        email_exists = User.objects.filter(email=email).exists()
+        user = User.objects.filter(email=email).first()
+        account_exists = user is not None
+
+        if account_exists:
+            auth_service = AuthService()
+            auth_service.accept_invite(
+                join_link=invite_link,
+                user=user
+            )
 
         detail_serializer = JoinLinkDetailSerializer(invite_link)
         return Response(
             {
                 "valid": True,
                 "email": email,
-                "email_exists": email_exists,
-                "next_step": "login" if email_exists else "signup",
+                "email_exists": account_exists,
+                "next_step": "login" if account_exists else "signup",
                 "invite": detail_serializer.data
             },
             status=status.HTTP_200_OK
@@ -256,12 +265,16 @@ class RegisterFromInviteAPIView(APIView):
 #                 status=status.HTTP_200_OK
 #             )
 
-#         Membership.objects.create(
+#         auth_service = AuthService()
+
+#         membership = auth_service.create_membership(
 #             user=request.user,
-#             organization=invite_link.organization,
+#             organization_id=invite_link.organization_id,
 #             role=invite_link.role,
 #             is_active=True
 #         )
+
+#         auth_service.create_profile(membership)
 
 #         invite_link.used_count += 1
 #         invite_link.save(update_fields=["used_count"])
