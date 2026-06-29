@@ -6,6 +6,8 @@ from user_auth.api.v1.views import (
     ResendActivationLink,
     ChangePassword,
     CheckEmailAPIView,
+    GoogleLoginAPIView,
+    SocialOrganizationCreateAPIView
 )
 
 
@@ -15,5 +17,7 @@ urlpatterns = [
     path('login/', JWTLoginAPIView.as_view(), name="jwt_login"),
     path('resend-link/', ResendActivationLink.as_view(), name="resend_activation_link"),
     path('change-password/', ChangePassword.as_view(), name="change_password"),
-    path('check-email/', CheckEmailAPIView.as_view(), name="check-email")
+    path('check-email/', CheckEmailAPIView.as_view(), name="check-email"),
+    path('google-login/', GoogleLoginAPIView.as_view()),
+    path("social/create-organization/", SocialOrganizationCreateAPIView.as_view()),
 ]
