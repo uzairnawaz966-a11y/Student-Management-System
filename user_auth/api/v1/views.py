@@ -2,11 +2,19 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.response import Response
-from user_auth.api.v1.serializers import JWTLoginSerializer, RegisterSerializer, CustomTokenRefreshSerializer, CheckEmailSerializer
 from user_auth.services.auth_service import AuthService
+from user_auth.services.google_auth_service import GoogleAuthService
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenRefreshView
 from organization.models import Membership
+from user_auth.api.v1.serializers import (
+    JWTLoginSerializer,
+    RegisterSerializer,
+    CustomTokenRefreshSerializer,
+    CheckEmailSerializer,
+    GoogleLoginSerializer,
+    SocialOrganizationCreateSerializer
+)
 
 
 class RegisterUser(APIView):
@@ -118,3 +126,28 @@ class CheckEmailAPIView(APIView):
             },
             status=status.HTTP_200_OK
         )
+
+class GoogleLoginAPIView(APIView):
+
+    def post(self, request):
+        serializer = GoogleLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        response, status_code = GoogleAuthService.google_login(
+            credential=serializer.validated_data["credential"],
+            invite_token=serializer.validated_data.get("invite_token"),
+        )
+
+        return Response(response, status=status_code)
+
+class SocialOrganizationCreateAPIView(APIView):
+
+    def post(self, request):
+        serializer = SocialOrganizationCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        response, status_code = GoogleAuthService.create_organization(
+            serializer.validated_data
+        )
+
+        return Response(response, status=status_code)

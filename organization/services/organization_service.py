@@ -10,6 +10,12 @@ class OrganizationService:
         try:
             with transaction.atomic():
 
+                if not user.is_active:
+                    raise ValidationError("Your account is not active. Please verify your email first")
+                
+                if Organization.objects.filter(owner=user).exists():
+                    raise ValidationError("You already own an organization")
+
                 organization = Organization.objects.create(
                     owner=user,
                     **validated_data

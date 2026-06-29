@@ -59,7 +59,7 @@ class JWTLoginSerializer(serializers.Serializer):
         ).first()
 
         if not membership:
-            raise serializers.ValidationError("Invalid organization")
+            raise serializers.ValidationError("You don't belong to any organization. Please create or join an organization first")
 
         data["membership"] = membership
 
@@ -97,3 +97,12 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
 class CheckEmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+class GoogleLoginSerializer(serializers.Serializer):
+    credential = serializers.CharField()
+    invite_token = serializers.UUIDField(required=False)
+
+class SocialOrganizationCreateSerializer(serializers.Serializer):
+    onboarding_token = serializers.UUIDField()
+    name = serializers.CharField(max_length=100)
+    description = serializers.CharField()

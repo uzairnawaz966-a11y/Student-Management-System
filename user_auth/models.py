@@ -99,3 +99,23 @@ class AccountActivationToken(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.token}"
+
+
+class SocialOnboardingToken(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="social_onboarding_token"
+    )
+
+    token = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        editable=False
+    )
+
+    expires_at = models.DateTimeField()
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at

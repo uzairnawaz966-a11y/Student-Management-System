@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'education',
     'organization',
     'user_auth',
-    'corsheaders'
+    'corsheaders',
+    'social_django',
 ]
 
 REST_FRAMEWORK = {
@@ -77,6 +78,20 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'core.urls'
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend'
+)
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+
+GOOGLE_CLIENT_SERCRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+
+GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+
+GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET")
+
 
 TEMPLATES = [
     {
